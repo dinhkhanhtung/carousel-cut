@@ -178,7 +178,7 @@ document.addEventListener('DOMContentLoaded', () => {
             controlsBoxMode.classList.remove('active');
             
             if (currentImage) {
-                btnAutoDetect.style.display = 'flex';
+                if (btnAutoDetect) btnAutoDetect.style.display = 'flex';
                 tipText.innerHTML = "Mẹo: Bạn có thể kéo thả các đường lưới màu xanh để thay đổi kích thước các ô.";
                 gridModeText.textContent = isCustomGrid ? "Tùy chỉnh" : "Chia đều";
                 gridModeText.style.color = isCustomGrid ? "var(--accent)" : "var(--text-secondary)";
@@ -190,7 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
             controlsBoxMode.classList.add('active');
             
             if (currentImage) {
-                btnAutoDetect.style.display = 'none';
+                if (btnAutoDetect) btnAutoDetect.style.display = 'none';
                 tipText.innerHTML = "Mẹo: Nhấp kéo chuột trên ảnh để vẽ khung tự do.";
                 gridModeText.textContent = `Tự do (${selectionBoxes.length} khung)`;
                 gridModeText.style.color = "var(--success)";
@@ -1330,7 +1330,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 imgDimOriginal.textContent = `${img.naturalWidth} x ${img.naturalHeight} px`;
                 
                 btnSlice.disabled = false;
-                btnAutoDetect.disabled = false;
+                if (btnAutoDetect) btnAutoDetect.disabled = false;
                 btnGenBoxes.disabled = false;
                 btnClearBoxes.disabled = false;
                 
@@ -1520,7 +1520,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Smart Self-Adaptive Auto-Detect Grid Borders Algorithm ---
 
     // --- Smart Self-Adaptive Auto-Detect Grid Borders Algorithm ---
-    btnAutoDetect.addEventListener('click', () => {
+    if (btnAutoDetect) {
+        btnAutoDetect.addEventListener('click', () => {
         if (!currentImage) return;
 
         const rows = parseInt(inputRows.value) || 1;
@@ -1769,6 +1770,7 @@ document.addEventListener('DOMContentLoaded', () => {
             alert("Không thể quét ảnh tự động. Bạn vẫn có thể dùng chuột kéo thả trực tiếp các đường lưới màu xanh để căn chỉnh thủ công!");
         }
     });
+    }
 
 
     btnGenBoxes.addEventListener('click', () => {
@@ -2514,7 +2516,7 @@ document.addEventListener('DOMContentLoaded', () => {
         fileInfo.style.display = 'none';
         
         btnSlice.disabled = true;
-        btnAutoDetect.disabled = true;
+        if (btnAutoDetect) btnAutoDetect.disabled = true;
         btnGenBoxes.disabled = true;
         btnClearBoxes.disabled = true;
         btnDownloadZip.disabled = true;
