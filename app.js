@@ -1817,8 +1817,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const width = currentImage.naturalWidth;
         const height = currentImage.naturalHeight;
 
-        // Đọc tỷ lệ scale xuất ảnh
-        const exportScale = selectExportScale ? (parseFloat(selectExportScale.value) || 1.0) : 1.0;
+        // Hàm tính tỷ lệ scale xuất ảnh động
+        const getExportScale = (w) => {
+            const val = selectExportScale ? selectExportScale.value : 'auto';
+            if (val === 'auto') {
+                // Đảm bảo chiều rộng mỗi slide sau khi cắt tối thiểu đạt 1080px để hiển thị sắc nét trên TikTok/Instagram
+                return w < 1080 ? (1080 / w) : 1.0;
+            }
+            return parseFloat(val) || 1.0;
+        };
 
         // Bắt đầu từ vị trí tiếp nối (số ảnh kết quả hiện tại)
         const startIndex = slicedImages.length;
@@ -1856,8 +1863,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         return;
                     }
 
-                    const targetW = Math.round(cropW * exportScale);
-                    const targetH = Math.round(cropH * exportScale);
+                    const scale = getExportScale(cropW);
+                    const targetW = Math.round(cropW * scale);
+                    const targetH = Math.round(cropH * scale);
 
                     const resultId = resultIdCounter++;
                     const sliceName = `slide_${startIndex + count}.png`;
@@ -1882,8 +1890,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
 
-                const targetW = Math.round(cropW * exportScale);
-                const targetH = Math.round(cropH * exportScale);
+                const scale = getExportScale(cropW);
+                const targetW = Math.round(cropW * scale);
+                const targetH = Math.round(cropH * scale);
 
                 const resultId = resultIdCounter++;
                 const sliceName = `slide_${startIndex + idx + 1}.png`;

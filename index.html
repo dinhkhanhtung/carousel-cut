@@ -80,12 +80,8 @@
                         <span class="file-size" id="file-size">(0 KB)</span>
                         <button type="button" class="btn-remove-file" id="btn-remove-file" title="Xóa ảnh">
                             <i class="fa-solid fa-xmark"></i>
-                        </button>
                     </div>
                 </div>
-                <p class="help-text" style="text-align: center; margin-top: 8px; margin-bottom: 16px; font-size: 0.72rem; color: var(--text-muted); line-height: 1.4;">
-                    💡 <strong>Mẹo:</strong> Hãy kéo thả file ảnh gốc từ máy tính để có chất lượng sắc nét 100%. Tránh dán ảnh chụp màn hình (Ctrl+V) vì ảnh chụp màn hình clipboard luôn bị giảm độ phân giải.
-                </p>
 
                 <!-- Parameters Box: Dynamic content based on Mode -->
                 <div class="params-container">
@@ -186,17 +182,17 @@
                 </div>
 
                 <!-- Export Scale Selection -->
-                <div class="control-item" style="margin-top: 10px; margin-bottom: 15px;">
+                <div class="control-item" style="margin-top: 10px; margin-bottom: 12px;">
                     <label for="select-export-scale">
                         <i class="fa-solid fa-up-right-and-down-left-from-center" style="color: #06b6d4;"></i> Độ phân giải xuất (Scale)
                     </label>
                     <select id="select-export-scale">
+                        <option value="auto" selected>Tự động tối ưu HD (Khuyên dùng)</option>
                         <option value="1">1x (Chất lượng gốc)</option>
                         <option value="1.5">1.5x (Sắc nét hơn)</option>
-                        <option value="2" selected>2x (Siêu nét - Khuyên dùng)</option>
+                        <option value="2">2x (Siêu nét)</option>
                         <option value="3">3x (Cực nét)</option>
                     </select>
-                    <p class="help-text">Tự động tăng độ phân giải để ảnh sắc nét hơn khi đăng lên MXH.</p>
                 </div>
 
                 <!-- Action Buttons -->
