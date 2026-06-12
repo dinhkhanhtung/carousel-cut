@@ -139,12 +139,80 @@ body {
     gap: 20px;
     overflow: hidden; /* Prevent panels overflowing the dashboard */
     min-height: 0;    /* Critical for grid item height calculations */
+    position: relative; /* Cần để nút toggle absolute hoạt động đúng */
+    transition: grid-template-columns 0.3s cubic-bezier(0.4, 0, 0.2, 1), gap 0.3s ease;
+}
+
+#sidebar {
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+                opacity 0.3s ease, 
+                padding 0.3s ease, 
+                margin 0.3s ease;
+    width: 100%;
+    opacity: 1;
+    overflow-y: auto;
+}
+
+/* Nút ẩn/hiện Sidebar lơ lửng */
+.btn-toggle-sidebar {
+    position: absolute;
+    top: 50%;
+    left: 366px; /* 360px sidebar + 6px căn chỉnh giữa ranh giới */
+    transform: translate(-50%, -50%);
+    width: 20px;
+    height: 60px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 100;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+                background-color 0.2s, 
+                color 0.2s, 
+                box-shadow 0.2s;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.btn-toggle-sidebar:hover {
+    color: var(--accent);
+    background: rgba(11, 15, 25, 0.95);
+    border-color: var(--accent);
+    box-shadow: 0 0 12px var(--accent-glow);
+}
+
+/* Khi ẩn Sidebar */
+.sidebar-collapsed {
+    grid-template-columns: 0px 1fr !important;
+    gap: 0 !important;
+}
+
+.sidebar-collapsed #sidebar {
+    width: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+.sidebar-collapsed .btn-toggle-sidebar {
+    left: 10px; /* Bám vào lề trái */
+    border-radius: 0 6px 6px 0; /* Bo tròn chỉ mép phải */
+    border-left: none;
 }
 
 @media (max-width: 1024px) {
     .app-content {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr !important;
         overflow-y: auto;
+    }
+    /* Trên di động/máy tính bảng nhỏ, ẩn nút toggle này đi vì bố cục dọc */
+    .btn-toggle-sidebar {
+        display: none !important;
     }
 }
 

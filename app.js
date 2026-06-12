@@ -53,6 +53,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnCloseMobilePreview = document.getElementById('btn-close-mobile-preview');
     const mobileCarouselSlider = document.getElementById('mobile-carousel-slider');
     const mobileCarouselDots = document.getElementById('mobile-carousel-dots');
+    const btnToggleSidebar = document.getElementById('btn-toggle-sidebar');
+    const appContent = document.getElementById('app-content');
 
     const ctx = previewCanvas.getContext('2d');
 
@@ -2182,6 +2184,30 @@ document.addEventListener('DOMContentLoaded', () => {
             const x = e.pageX - mobileCarouselSlider.offsetLeft;
             const walk = (x - startX) * 1.5; // tốc độ scroll
             mobileCarouselSlider.scrollLeft = scrollLeft - walk;
+        });
+    }
+
+    // --- Toggle Sidebar logic ---
+    if (btnToggleSidebar && appContent) {
+        btnToggleSidebar.addEventListener('click', () => {
+            const isCollapsed = appContent.classList.toggle('sidebar-collapsed');
+            
+            // Cập nhật icon và title cho nút
+            const icon = btnToggleSidebar.querySelector('i');
+            if (icon) {
+                if (isCollapsed) {
+                    icon.className = 'fa-solid fa-chevron-right';
+                    btnToggleSidebar.title = 'Hiện thanh cấu hình';
+                } else {
+                    icon.className = 'fa-solid fa-chevron-left';
+                    btnToggleSidebar.title = 'Ẩn thanh cấu hình';
+                }
+            }
+            
+            // Vẽ lại Grid/Canvas sau khi transition CSS hoàn tất (300ms)
+            setTimeout(() => {
+                drawLiveGrid();
+            }, 300);
         });
     }
 

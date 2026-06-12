@@ -46,9 +46,9 @@
             <p class="subtitle">Cắt ảnh ghép thông minh thành lưới đa ô để đăng Instagram, Facebook, TikTok tiện lợi</p>
         </header>
 
-        <main class="app-content">
+        <main class="app-content" id="app-content">
             <!-- Left Side: Controls & Input -->
-            <section class="panel control-panel">
+            <section class="panel control-panel" id="sidebar">
                 <div class="panel-header">
                     <i class="fa-solid fa-sliders"></i>
                     <h2>Cấu hình & Tải ảnh</h2>
@@ -204,6 +204,11 @@
                 </div>
             </section>
 
+            <!-- Toggle Sidebar Button -->
+            <button id="btn-toggle-sidebar" class="btn-toggle-sidebar" title="Ẩn thanh cấu hình">
+                <i class="fa-solid fa-chevron-left"></i>
+            </button>
+ 
             <!-- Right Side: Live Canvas Grid & Cut Previews -->
             <section class="panel view-panel">
                 <!-- Tab Headers to Switch between Live Grid and Sliced Preview -->
