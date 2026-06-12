@@ -404,6 +404,7 @@ body {
     color: var(--text-muted);
     margin-left: 6px;
     margin-right: 8px;
+    white-space: nowrap;
 }
 
 .btn-remove-file {
