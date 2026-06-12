@@ -1199,6 +1199,7 @@ document.addEventListener('DOMContentLoaded', () => {
         dropzonePrompt.style.display = 'none';
         fileInfo.style.display = 'flex';
         dropzone.classList.add('has-image');
+        appContent.classList.add('has-image');
 
         const reader = new FileReader();
         reader.onload = (event) => {
@@ -2216,6 +2217,7 @@ document.addEventListener('DOMContentLoaded', () => {
         fileInput.value = '';
         currentImage = null;
         dropzone.classList.remove('has-image');
+        appContent.classList.remove('has-image');
         slicedImages = [];
         slicedBlobs = [];
         colsX = [];

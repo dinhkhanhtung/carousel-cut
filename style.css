@@ -853,18 +853,7 @@ input[type="number"] {
 
 /* Interactive Tip Display */
 .interactive-tip {
-    background: rgba(6, 182, 212, 0.07);
-    border: 1px solid rgba(6, 182, 212, 0.15);
-    border-radius: var(--border-radius-sm);
-    padding: 8px 12px;
-    font-size: 0.8rem;
-    color: var(--text-primary);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    line-height: 1.3;
-    animation: fadeIn 0.4s ease-out;
-    flex-shrink: 0;
+    display: none !important;
 }
 
 .animated-info {
@@ -1528,4 +1517,297 @@ input[type="number"] {
     background: var(--accent) !important;
     border-color: var(--accent) !important;
     color: #000 !important;
+}
+
+/* ==========================================
+   MOBILE RESPONSIVE & LAYOUT OPTIMIZATION (MOBILE-FIRST)
+   ========================================== */
+@media (max-width: 768px) {
+    /* Tối ưu container chính */
+    .app-container {
+        padding: 8px !important;
+        gap: 8px !important;
+        height: auto !important;
+        overflow-x: hidden !important;
+    }
+
+    .app-header {
+        margin-bottom: 4px !important;
+        padding: 4px 0 !important;
+        text-align: center !important;
+    }
+
+    .app-header .logo {
+        justify-content: center !important;
+    }
+
+    .app-header .brand-text {
+        font-size: 1.5rem !important;
+    }
+
+    .app-header .subtitle {
+        display: none !important; /* Ẩn subtitle trên di động để tiết kiệm tối đa diện tích */
+    }
+
+    /* Quy trình làm việc linh hoạt bằng Flexbox Order */
+    .app-content {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 10px !important;
+        height: auto !important;
+        overflow: visible !important;
+    }
+
+    /* 1. KHI CHƯA CÓ ẢNH: Ẩn view-panel (chưa có canvas và kết quả) */
+    .app-content:not(.has-image) .view-panel {
+        display: none !important;
+    }
+
+    /* 2. KHI ĐÃ CÓ ẢNH: Đưa Canvas lên trên cùng, Bảng cấu hình xuống dưới */
+    .app-content.has-image .view-panel {
+        order: 1 !important;
+        height: auto !important;
+        min-height: 250px !important;
+    }
+
+    .app-content.has-image #sidebar {
+        order: 2 !important;
+        height: auto !important;
+    }
+
+    /* Tối ưu hóa panel */
+    .panel {
+        padding: 12px !important;
+        gap: 10px !important;
+        height: auto !important;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15) !important;
+        border-radius: var(--border-radius-md) !important;
+    }
+
+    .panel-header {
+        padding-bottom: 6px !important;
+        margin-bottom: 2px !important;
+    }
+
+    .panel-header h2 {
+        font-size: 0.95rem !important;
+    }
+
+    /* Mode Switcher nằm ngang gọn gàng */
+    .mode-switch-container {
+        gap: 6px !important;
+        margin-bottom: 2px !important;
+    }
+
+    .mode-btn {
+        padding: 6px 10px !important;
+        font-size: 0.75rem !important;
+        height: 34px !important;
+    }
+
+    /* Dropzone kéo thả ảnh */
+    .dropzone {
+        padding: 14px !important;
+        min-height: 90px !important;
+    }
+
+    .dropzone-prompt i {
+        font-size: 1.6rem !important;
+    }
+
+    .dropzone-prompt .dropzone-text-main {
+        font-size: 0.8rem !important;
+        margin-top: 2px !important;
+    }
+
+    .dropzone-prompt .dropzone-text-sub,
+    .dropzone-prompt .file-format-badge {
+        display: none !important; /* Ẩn bớt chữ rườm rà trên di động */
+    }
+
+    /* File info mini gọn gàng */
+    .dropzone-file-info {
+        padding: 4px 8px !important;
+        font-size: 0.75rem !important;
+        gap: 6px !important;
+    }
+
+    /* Cấu hình Số hàng & Số cột nằm song song */
+    #controls-grid-mode .control-group-grid {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 8px !important;
+    }
+
+    /* Tối ưu hóa spinner số hàng/cột */
+    .control-item label {
+        font-size: 0.75rem !important;
+        margin-bottom: 2px !important;
+    }
+
+    .number-input-wrapper {
+        height: 32px !important;
+    }
+
+    .number-btn {
+        width: 28px !important;
+    }
+
+    .number-val {
+        font-size: 0.85rem !important;
+    }
+
+    /* Tỉ lệ cắt, độ rộng viền */
+    .control-group-grid {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 8px !important;
+    }
+
+    /* Input & Select control nhỏ gọn */
+    select.input-control, input.input-control {
+        height: 32px !important;
+        padding: 4px 8px !important;
+        font-size: 0.75rem !important;
+    }
+
+    .help-text {
+        font-size: 0.65rem !important;
+        margin-top: 2px !important;
+    }
+
+    /* Các nút hành động chính (Cắt ảnh, tải zip) */
+    .action-buttons {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 6px !important;
+        margin-top: 6px !important;
+    }
+
+    .action-buttons .btn {
+        height: 36px !important;
+        font-size: 0.8rem !important;
+        padding: 4px 10px !important;
+    }
+
+    /* Tabs View Panel */
+    .tabs {
+        padding: 2px !important;
+        gap: 2px !important;
+        margin-bottom: 6px !important;
+        height: 36px !important;
+    }
+
+    .tab-btn {
+        padding: 6px 8px !important;
+        font-size: 0.75rem !important;
+    }
+
+    /* Canvas hiển thị to rõ ràng ở trên */
+    .canvas-wrapper {
+        padding: 4px !important;
+        min-height: 180px !important;
+    }
+
+    #preview-canvas {
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4) !important;
+    }
+
+    .image-meta-info {
+        flex-wrap: wrap !important;
+        justify-content: flex-start !important;
+        gap: 6px !important;
+        font-size: 0.68rem !important;
+        padding: 4px 6px !important;
+    }
+
+    /* Tab Kết quả */
+    .result-header {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 6px !important;
+    }
+
+    .result-stats {
+        font-size: 0.75rem !important;
+    }
+
+    .result-actions {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 6px !important;
+        width: 100% !important;
+    }
+
+    .result-actions .btn {
+        width: 100% !important;
+        font-size: 0.75rem !important;
+        padding: 6px !important;
+        height: 32px !important;
+    }
+
+    #btn-clear-results {
+        grid-column: span 2 !important;
+    }
+
+    .result-grid {
+        grid-template-columns: repeat(auto-fill, minmax(85px, 1fr)) !important;
+        gap: 6px !important;
+        padding: 4px 0 !important;
+    }
+
+    .result-item {
+        border-radius: 4px !important;
+    }
+
+    .result-item-badge {
+        font-size: 0.65rem !important;
+        padding: 2px 4px !important;
+    }
+
+    /* Smartphone Preview Modal */
+    .mobile-mockup {
+        width: 250px !important;
+        height: 480px !important;
+        border-width: 6px !important;
+    }
+
+    .mobile-screen {
+        border-radius: 20px !important;
+    }
+
+    .tiktok-caption {
+        bottom: 45px !important;
+        left: 10px !important;
+        right: 45px !important;
+        font-size: 0.7rem !important;
+    }
+
+    .tiktok-actions {
+        right: 6px !important;
+        bottom: 50px !important;
+        gap: 6px !important;
+    }
+
+    .tiktok-action i {
+        font-size: 1rem !important;
+    }
+
+    .tiktok-action span {
+        font-size: 0.55rem !important;
+    }
+
+    .mobile-carousel-dots {
+        bottom: 22px !important;
+    }
+
+    .mobile-preview-hint {
+        font-size: 0.68rem !important;
+        padding: 4px 10px !important;
+    }
+
+    /* Ẩn footer trên di động */
+    .app-footer {
+        display: none !important;
+    }
 }
