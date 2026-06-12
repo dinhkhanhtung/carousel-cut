@@ -1910,8 +1910,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         sliceCanvas.width = targetW;
         sliceCanvas.height = targetH;
-        sliceCtx.imageSmoothingEnabled = true;
-        sliceCtx.imageSmoothingQuality = 'high';
+        if (targetW === cropW && targetH === cropH) {
+            sliceCtx.imageSmoothingEnabled = false;
+        } else {
+            sliceCtx.imageSmoothingEnabled = true;
+            sliceCtx.imageSmoothingQuality = 'high';
+        }
         sliceCtx.clearRect(0, 0, targetW, targetH);
 
         // Vẽ toàn bộ vùng ảnh gốc trong ô lưới (cropW x cropH) lên Canvas con (targetW x targetH)
