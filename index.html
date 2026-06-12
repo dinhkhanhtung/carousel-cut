@@ -182,6 +182,20 @@
                     <p class="help-text">Giúp loại bỏ khoảng trắng hoặc viền phân cách đen ở giữa các ô ghép.</p>
                 </div>
 
+                <!-- Export Scale Selection -->
+                <div class="control-item" style="margin-top: 10px; margin-bottom: 15px;">
+                    <label for="select-export-scale">
+                        <i class="fa-solid fa-up-right-and-down-left-from-center" style="color: #06b6d4;"></i> Độ phân giải xuất (Scale)
+                    </label>
+                    <select id="select-export-scale">
+                        <option value="1">1x (Chất lượng gốc)</option>
+                        <option value="1.5">1.5x (Sắc nét hơn)</option>
+                        <option value="2" selected>2x (Siêu nét - Khuyên dùng)</option>
+                        <option value="3">3x (Cực nét)</option>
+                    </select>
+                    <p class="help-text">Tự động tăng độ phân giải để ảnh sắc nét hơn khi đăng lên MXH.</p>
+                </div>
+
                 <!-- Action Buttons -->
                 <div class="action-buttons">
                     <button id="btn-auto-detect" class="btn btn-secondary" disabled>

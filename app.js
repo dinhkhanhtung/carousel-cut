@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const offsetNumberVal = document.getElementById('input-offset-number');
     
     const selectRatio = document.getElementById('select-ratio');
+    const selectExportScale = document.getElementById('select-export-scale');
     const switchUniform = document.getElementById('switch-uniform');
     const switchSnap = document.getElementById('switch-snap');
     
@@ -1816,6 +1817,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const width = currentImage.naturalWidth;
         const height = currentImage.naturalHeight;
 
+        // Đọc tỷ lệ scale xuất ảnh
+        const exportScale = selectExportScale ? (parseFloat(selectExportScale.value) || 1.0) : 1.0;
+
         // Bắt đầu từ vị trí tiếp nối (số ảnh kết quả hiện tại)
         const startIndex = slicedImages.length;
         
@@ -1823,21 +1827,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (btnRenumberResults) btnRenumberResults.style.display = 'inline-flex';
         if (btnMobilePreview) btnMobilePreview.style.display = 'inline-flex';
         if (btnDownloadZip) btnDownloadZip.style.display = 'inline-flex';
+
         if (slicingMode === 'grid') {
             const rows = parseInt(inputRows.value) || 1;
             const cols = parseInt(inputCols.value) || 1;
             const boundariesX = [0, ...colsX, width];
             const boundariesY = [0, ...rowsY, height];
-
-            const firstCellW = boundariesX[1] - boundariesX[0];
-            const firstCellH = boundariesY[1] - boundariesY[0];
-            const currentTargetW = firstCellW - (2 * offset);
-            const currentTargetH = firstCellH - (2 * offset);
-
-            if (slicedImages.length === 0) {
-                globalTargetW = currentTargetW;
-                globalTargetH = currentTargetH;
-            }
 
             const totalNewCells = rows * cols;
             let count = 1;
@@ -1861,9 +1856,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         return;
                     }
 
+                    const targetW = Math.round(cropW * exportScale);
+                    const targetH = Math.round(cropH * exportScale);
+
                     const resultId = resultIdCounter++;
                     const sliceName = `slide_${startIndex + count}.png`;
-                    processSlice(sx, sy, cropW, cropH, sliceName, resultId, globalTargetW, globalTargetH);
+                    processSlice(sx, sy, cropW, cropH, sliceName, resultId, targetW, targetH);
                     count++;
                 }
             }
@@ -1871,14 +1869,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (selectionBoxes.length === 0) {
                 alert('Vui lòng vẽ ít nhất 1 khung cắt tự do trên ảnh!');
                 return;
-            }
-
-            const currentTargetW = selectionBoxes[0].w - (2 * offset);
-            const currentTargetH = selectionBoxes[0].h - (2 * offset);
-
-            if (slicedImages.length === 0) {
-                globalTargetW = currentTargetW;
-                globalTargetH = currentTargetH;
             }
 
             selectionBoxes.forEach((box, idx) => {
@@ -1892,9 +1882,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
 
+                const targetW = Math.round(cropW * exportScale);
+                const targetH = Math.round(cropH * exportScale);
+
                 const resultId = resultIdCounter++;
                 const sliceName = `slide_${startIndex + idx + 1}.png`;
-                processSlice(sx, sy, cropW, cropH, sliceName, resultId, globalTargetW, globalTargetH);
+                processSlice(sx, sy, cropW, cropH, sliceName, resultId, targetW, targetH);
             });
         }
 
