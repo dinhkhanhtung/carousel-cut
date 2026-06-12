@@ -139,6 +139,29 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // --- Paste image from clipboard shortcut Ctrl + V ---
+    window.addEventListener('paste', (e) => {
+        // Tránh dán ảnh khi người dùng đang tập trung gõ vào các ô nhập liệu
+        if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') {
+            return;
+        }
+        
+        const clipboardData = e.clipboardData || window.clipboardData;
+        if (!clipboardData) return;
+        
+        const items = clipboardData.items;
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].type.indexOf('image') !== -1) {
+                const file = items[i].getAsFile();
+                if (file) {
+                    handleImageSelection(file);
+                    e.preventDefault();
+                    break;
+                }
+            }
+        }
+    });
+
     btnRemoveFile.addEventListener('click', (e) => {
         e.stopPropagation(); // Prevent opening file chooser
         resetApp();
@@ -1280,8 +1303,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        fileName.textContent = file.name;
-        fileSize.textContent = `(${(file.size / 1024).toFixed(1)} KB)`;
+        fileName.textContent = file.name || 'Ảnh từ Clipboard';
+        fileSize.textContent = file.size ? `(${(file.size / 1024).toFixed(1)} KB)` : '';
         dropzonePrompt.style.display = 'none';
         fileInfo.style.display = 'flex';
         dropzone.classList.add('has-image');
@@ -1614,58 +1637,68 @@ document.addEventListener('DOMContentLoaded', () => {
             let detectedCols = extractSeparators(targetColCounts, colThreshold, width);
             let detectedRows = extractSeparators(targetRowCounts, rowThreshold, height);
 
-            // --- Bộ lọc khử nhiễu (Noise Filtering) dựa trên khoảng cách tối thiểu giữa các slide ---
-            // Đảm bảo các đường phân chia slide phải cách nhau tối thiểu 12% kích thước ảnh
-            const filterNoiseSeparators = (seps, maxLen, neededCount) => {
-                if (seps.length <= neededCount) return seps;
+            // --- Bộ lọc khử nhiễu tự động (Dynamic Noise Filtering) ---
+            // Không yêu cầu truyền vào số lượng cần phát hiện trước mà tự nhận định
+            const filterSeparatorsDynamic = (seps, maxLen) => {
+                if (seps.length === 0) return [];
                 
-                // Ưu tiên các dải phân cách có độ rộng lớn hơn (rãnh cắt thực tế)
-                seps.sort((a, b) => b.width - a.width);
+                // Ưu tiên các dải phân cách có độ rộng lớn hơn (rãnh cắt thực tế của ảnh)
+                const sortedByWidth = [...seps].sort((a, b) => b.width - a.width);
 
                 const result = [];
-                const minDistance = maxLen * 0.12; 
+                // Khoảng cách tối thiểu giữa 2 đường lưới là 10% chiều dài ảnh để loại bỏ vạch nhiễu
+                const minDistance = maxLen * 0.10; 
 
-                for (let i = 0; i < seps.length; i++) {
-                    const candidate = seps[i];
+                for (let i = 0; i < sortedByWidth.length; i++) {
+                    const candidate = sortedByWidth[i];
                     const isTooClose = result.some(selected => Math.abs(selected.center - candidate.center) < minDistance);
                     if (!isTooClose) {
                         result.push(candidate);
-                        if (result.length === neededCount) break;
                     }
                 }
                 
-                return result;
+                // Sắp xếp lại tọa độ tăng dần từ trái sang phải hoặc từ trên xuống dưới
+                return result.sort((a, b) => a.center - b.center);
             };
 
-            const neededColsCount = cols - 1;
-            let updatedCols = [];
-            if (neededColsCount > 0) {
-                const filteredCols = filterNoiseSeparators(detectedCols, width, neededColsCount);
-                if (filteredCols.length === neededColsCount) {
-                    updatedCols = filteredCols.map(item => item.center).sort((a, b) => a - b);
-                } else {
-                    // Fallback chia đều nếu không phát hiện đủ số lượng dải phân cách hợp lệ
-                    for (let i = 1; i < cols; i++) {
-                        updatedCols.push((width / cols) * i);
-                    }
+            const filteredCols = filterSeparatorsDynamic(detectedCols, width);
+            const filteredRows = filterSeparatorsDynamic(detectedRows, height);
+
+            const hasDetectedCols = filteredCols.length > 0;
+            const hasDetectedRows = filteredRows.length > 0;
+
+            let finalCols = [];
+            let finalRows = [];
+            let finalColsCount = 1;
+            let finalRowsCount = 1;
+
+            if (hasDetectedCols || hasDetectedRows) {
+                // Nếu phát hiện được bất kỳ dải phân cách dọc hoặc ngang nào
+                finalCols = filteredCols.map(item => item.center);
+                finalRows = filteredRows.map(item => item.center);
+                finalColsCount = filteredCols.length + 1;
+                finalRowsCount = filteredRows.length + 1;
+            } else {
+                // Fallback: Chia đều theo số lượng hàng/cột hiện tại trên ô nhập liệu
+                const currentRows = parseInt(inputRows.value) || 1;
+                const currentCols = parseInt(inputCols.value) || 1;
+                finalColsCount = currentCols;
+                finalRowsCount = currentRows;
+
+                for (let i = 1; i < currentCols; i++) {
+                    finalCols.push((width / currentCols) * i);
+                }
+                for (let j = 1; j < currentRows; j++) {
+                    finalRows.push((height / currentRows) * j);
                 }
             }
 
-            const neededRowsCount = rows - 1;
-            let updatedRows = [];
-            if (neededRowsCount > 0) {
-                const filteredRows = filterNoiseSeparators(detectedRows, height, neededRowsCount);
-                if (filteredRows.length === neededRowsCount) {
-                    updatedRows = filteredRows.map(item => item.center).sort((a, b) => a - b);
-                } else {
-                    for (let j = 1; j < rows; j++) {
-                        updatedRows.push((height / rows) * j);
-                    }
-                }
-            }
+            // Cập nhật thông số lên ô nhập liệu trên giao diện
+            inputCols.value = finalColsCount;
+            inputRows.value = finalRowsCount;
 
-            colsX = updatedCols;
-            rowsY = updatedRows;
+            colsX = finalCols;
+            rowsY = finalRows;
             
             isCustomGrid = true;
             gridModeText.textContent = "Tự động căn (Auto-Detect)";
