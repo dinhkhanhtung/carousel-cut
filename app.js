@@ -1695,9 +1695,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // Bắt đầu từ vị trí tiếp nối (số ảnh kết quả hiện tại)
         const startIndex = slicedImages.length;
         
-        if (btnClearResults) btnClearResults.style.display = 'block';
-        if (btnRenumberResults) btnRenumberResults.style.display = 'block';
-        if (btnMobilePreview) btnMobilePreview.style.display = 'block';
+        if (btnClearResults) btnClearResults.style.display = 'inline-flex';
+        if (btnRenumberResults) btnRenumberResults.style.display = 'inline-flex';
+        if (btnMobilePreview) btnMobilePreview.style.display = 'inline-flex';
+        if (btnDownloadZip) btnDownloadZip.style.display = 'inline-flex';
 
         const tempCanvas = document.createElement('canvas');
         const tempCtx = tempCanvas.getContext('2d');
@@ -1835,6 +1836,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (total === 0) {
                 btnDownloadZip.disabled = true;
+                if (btnDownloadZip) btnDownloadZip.style.display = 'none';
                 if (btnClearResults) btnClearResults.style.display = 'none';
                 if (btnRenumberResults) btnRenumberResults.style.display = 'none';
                 if (btnMobilePreview) btnMobilePreview.style.display = 'none';
@@ -2091,6 +2093,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     resultCountBadge.textContent = '0';
                 }
                 btnDownloadZip.disabled = true;
+                if (btnDownloadZip) btnDownloadZip.style.display = 'none';
                 if (btnClearResults) btnClearResults.style.display = 'none';
                 if (btnRenumberResults) btnRenumberResults.style.display = 'none';
                 if (btnMobilePreview) btnMobilePreview.style.display = 'none';
@@ -2338,6 +2341,7 @@ document.addEventListener('DOMContentLoaded', () => {
         resultIdCounter = 1;
         globalTargetW = null;
         globalTargetH = null;
+        if (btnDownloadZip) btnDownloadZip.style.display = 'none';
         if (btnClearResults) btnClearResults.style.display = 'none';
         if (btnRenumberResults) btnRenumberResults.style.display = 'none';
         if (btnMobilePreview) btnMobilePreview.style.display = 'none';

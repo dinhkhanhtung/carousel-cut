@@ -190,9 +190,6 @@
                     <button id="btn-slice" class="btn btn-primary" disabled>
                         <i class="fa-solid fa-crop-simple"></i> Cắt ảnh ngay
                     </button>
-                    <button id="btn-download-zip" class="btn btn-success" disabled>
-                        <i class="fa-solid fa-file-zipper"></i> Tải xuống toàn bộ (ZIP)
-                    </button>
                 </div>
             </section>
 
@@ -244,13 +241,16 @@
                             </div>
                             <div class="result-actions">
                                 <button id="btn-renumber-results" class="btn btn-secondary btn-accent-hover" style="display: none;" title="Đánh số lại slide từ 1 đến N theo thứ tự hiển thị hiện tại">
-                                    <i class="fa-solid fa-arrow-down-1-9"></i> Đánh số lại
+                                    <i class="fa-solid fa-arrow-down-1-9"></i> <span>Đánh số</span><span class="desktop-only"> lại</span>
                                 </button>
                                 <button id="btn-mobile-preview" class="btn btn-secondary btn-accent-hover" style="display: none;" title="Xem giả lập Carousel vuốt slide trên điện thoại">
-                                    <i class="fa-solid fa-mobile-screen-button"></i> Xem thử trên điện thoại
+                                    <i class="fa-solid fa-mobile-screen-button"></i> <span>Xem thử</span><span class="desktop-only"> trên điện thoại</span>
                                 </button>
-                                <button id="btn-clear-results" class="btn btn-secondary btn-danger-hover" style="display: none;">
-                                    <i class="fa-solid fa-trash-can"></i> Xóa tất cả kết quả
+                                <button id="btn-download-zip" class="btn btn-success" style="display: none;" disabled title="Tải xuống toàn bộ slide dưới dạng ZIP">
+                                    <i class="fa-solid fa-file-zipper"></i> <span>Tải ZIP</span><span class="desktop-only"> toàn bộ</span>
+                                </button>
+                                <button id="btn-clear-results" class="btn btn-secondary btn-danger-hover" style="display: none;" title="Xóa toàn bộ slide kết quả">
+                                    <i class="fa-solid fa-trash-can"></i> <span>Xóa sạch</span><span class="desktop-only"> kết quả</span>
                                 </button>
                             </div>
                         </div>

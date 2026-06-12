@@ -960,6 +960,12 @@ input[type="number"] {
     color: var(--accent);
 }
 
+.result-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
 .btn-danger-hover:hover {
     background: var(--danger) !important;
     border-color: var(--danger) !important;
@@ -1732,22 +1738,23 @@ input[type="number"] {
         font-size: 0.75rem !important;
     }
 
+    /* Class ẩn bớt chữ trên di động */
+    .desktop-only {
+        display: none !important;
+    }
+
     .result-actions {
         display: grid !important;
-        grid-template-columns: 1fr 1fr !important;
-        gap: 6px !important;
+        grid-template-columns: repeat(4, 1fr) !important; /* Chia đều 4 nút trên 1 hàng */
+        gap: 4px !important;
         width: 100% !important;
     }
 
     .result-actions .btn {
         width: 100% !important;
-        font-size: 0.75rem !important;
-        padding: 6px !important;
+        font-size: 0.65rem !important; /* Chữ nhỏ để vừa khung */
+        padding: 4px 2px !important;
         height: 32px !important;
-    }
-
-    #btn-clear-results {
-        grid-column: span 2 !important;
     }
 
     .result-grid {
