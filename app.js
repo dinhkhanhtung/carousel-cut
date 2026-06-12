@@ -1072,7 +1072,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Zoom factor: 1.15 for zoom in, 0.85 for zoom out
         const zoomFactor = e.deltaY < 0 ? 1.15 : 0.85;
-        const newZoomScale = Math.max(0.4, Math.min(8.0, zoomScale * zoomFactor));
+        const newZoomScale = Math.max(0.05, Math.min(10.0, zoomScale * zoomFactor));
 
         // Adjust pan offsets to keep point under cursor stable
         panX = canvasX - (canvasX - panX) * (newZoomScale / zoomScale);
@@ -1082,12 +1082,75 @@ document.addEventListener('DOMContentLoaded', () => {
         drawLiveGrid();
     }, { passive: false });
 
+    // Programmatic Zoom Helper (Zoom from Center)
+    const triggerProgrammaticZoom = (factor) => {
+        if (!currentImage) return;
+        const rect = previewCanvas.getBoundingClientRect();
+        const mouseX = rect.width / 2;
+        const mouseY = rect.height / 2;
+        
+        const imgRatio = currentImage.naturalWidth / currentImage.naturalHeight;
+        const canvasW = rect.width;
+        const canvasH = rect.height;
+        const canvasRatio = canvasW / canvasH;
+
+        let actualRenderedW = canvasW;
+        let actualRenderedH = canvasH;
+        let offsetX = 0;
+        let offsetY = 0;
+
+        if (canvasRatio > imgRatio) {
+            actualRenderedW = canvasH * imgRatio;
+            offsetX = (canvasW - actualRenderedW) / 2;
+        } else {
+            actualRenderedH = canvasW / imgRatio;
+            offsetY = (canvasH - actualRenderedH) / 2;
+        }
+
+        const relativeX = mouseX - offsetX;
+        const relativeY = mouseY - offsetY;
+
+        const scaleX = currentImage.naturalWidth / actualRenderedW;
+        const scaleY = currentImage.naturalHeight / actualRenderedH;
+
+        const canvasX = relativeX * scaleX;
+        const canvasY = relativeY * scaleY;
+
+        const newZoomScale = Math.max(0.05, Math.min(10.0, zoomScale * factor));
+
+        panX = canvasX - (canvasX - panX) * (newZoomScale / zoomScale);
+        panY = canvasY - (canvasY - panY) * (newZoomScale / zoomScale);
+        zoomScale = newZoomScale;
+
+        drawLiveGrid();
+    };
+
+    // Helper to change input grid values (rows/cols) via keyboard
+    const changeGridValue = (inputId, delta) => {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+        const min = parseInt(input.min) || 1;
+        const max = parseInt(input.max) || 20;
+        let val = parseInt(input.value) || 1;
+        val = Math.max(min, Math.min(max, val + delta));
+        input.value = val;
+        input.dispatchEvent(new Event('input'));
+    };
+
     // Global Key Shortcuts Listener
     window.addEventListener('keydown', (e) => {
         if (!currentImage) return;
 
-        // Ignore shortcuts if user is typing in inputs
-        if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') {
+        // Ignore shortcuts if user is typing in inputs or select options
+        if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'SELECT') {
+            return;
+        }
+
+        // Toggle Keyboard Shortcuts Panel with '?'
+        if (e.key === '?') {
+            e.preventDefault();
+            const popup = document.getElementById('shortcuts-popup');
+            if (popup) popup.classList.toggle('active');
             return;
         }
 
@@ -1100,24 +1163,83 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Only handle box nudge and delete if we are in Box mode, a box is selected
+        // 1 & 2 to Switch Mode
+        if (e.key === '1') {
+            e.preventDefault();
+            if (modeGridBtn) modeGridBtn.click();
+        } else if (e.key === '2') {
+            e.preventDefault();
+            if (modeBoxBtn) modeBoxBtn.click();
+        }
+
+        // Q or B to Toggle Sidebar
+        if (e.key.toLowerCase() === 'q' || e.key.toLowerCase() === 'b') {
+            e.preventDefault();
+            if (btnToggleSidebar) btnToggleSidebar.click();
+        }
+
+        // C or Enter to Slice
+        if ((e.key.toLowerCase() === 'c' || e.key === 'Enter') && !btnSlice.disabled) {
+            e.preventDefault();
+            btnSlice.click();
+        }
+
+        // Z to Download ZIP
+        if (e.key.toLowerCase() === 'z' && !btnDownloadZip.disabled) {
+            e.preventDefault();
+            btnDownloadZip.click();
+        }
+
+        // + / = / - / 0 to Zoom
+        if (e.key === '+' || e.key === '=') {
+            e.preventDefault();
+            triggerProgrammaticZoom(1.15);
+        } else if (e.key === '-') {
+            e.preventDefault();
+            triggerProgrammaticZoom(0.85);
+        } else if (e.key === '0') {
+            e.preventDefault();
+            zoomScale = 1.0;
+            panX = 0;
+            panY = 0;
+            drawLiveGrid();
+        }
+
+        // Grid mode controls (W/S/A/D or Arrows)
+        if (slicingMode === 'grid') {
+            if (e.key.toLowerCase() === 'w' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                changeGridValue('input-rows', 1);
+            } else if (e.key.toLowerCase() === 's' || e.key === 'ArrowDown') {
+                e.preventDefault();
+                changeGridValue('input-rows', -1);
+            } else if (e.key.toLowerCase() === 'd' || e.key === 'ArrowRight') {
+                e.preventDefault();
+                changeGridValue('input-cols', 1);
+            } else if (e.key.toLowerCase() === 'a' || e.key === 'ArrowLeft') {
+                e.preventDefault();
+                changeGridValue('input-cols', -1);
+            }
+        }
+
+        // Box mode controls (W/S/A/D or Arrows to nudge box)
         if (slicingMode === 'box' && selectedBoxIdx !== -1) {
             const box = selectionBoxes[selectedBoxIdx];
             const step = e.shiftKey ? 10 : 1;
 
-            if (e.key === 'ArrowUp') {
+            if (e.key === 'ArrowUp' || e.key.toLowerCase() === 'w') {
                 e.preventDefault();
                 box.y = Math.max(0, box.y - step);
                 drawLiveGrid();
-            } else if (e.key === 'ArrowDown') {
+            } else if (e.key === 'ArrowDown' || e.key.toLowerCase() === 's') {
                 e.preventDefault();
                 box.y = Math.min(currentImage.naturalHeight - box.h, box.y + step);
                 drawLiveGrid();
-            } else if (e.key === 'ArrowLeft') {
+            } else if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') {
                 e.preventDefault();
                 box.x = Math.max(0, box.x - step);
                 drawLiveGrid();
-            } else if (e.key === 'ArrowRight') {
+            } else if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') {
                 e.preventDefault();
                 box.x = Math.min(currentImage.naturalWidth - box.w, box.x + step);
                 drawLiveGrid();
@@ -1135,14 +1257,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Global shortcuts for modes and escape
+        // Global shortcuts for escape
         if (e.key === 'Escape') {
             selectedBoxIdx = -1;
             drawLiveGrid();
-        } else if (e.key.toLowerCase() === 'g') {
-            setSlicingMode('grid');
-        } else if (e.key.toLowerCase() === 'b') {
-            setSlicingMode('box');
         }
     });
 
@@ -2249,4 +2367,32 @@ document.addEventListener('DOMContentLoaded', () => {
         switchTab('tab-live-grid');
         setSlicingMode('grid');
     }
+
+    // Shortcuts Helper UI Click Listeners
+    const btnShortcutsToggle = document.getElementById('btn-shortcuts-toggle');
+    const btnCloseShortcuts = document.getElementById('btn-close-shortcuts');
+    const shortcutsPopup = document.getElementById('shortcuts-popup');
+
+    if (btnShortcutsToggle && shortcutsPopup) {
+        btnShortcutsToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            shortcutsPopup.classList.toggle('active');
+        });
+    }
+
+    if (btnCloseShortcuts && shortcutsPopup) {
+        btnCloseShortcuts.addEventListener('click', (e) => {
+            e.stopPropagation();
+            shortcutsPopup.classList.remove('active');
+        });
+    }
+
+    // Đóng popup khi click ra ngoài
+    document.addEventListener('click', (e) => {
+        if (shortcutsPopup && shortcutsPopup.classList.contains('active')) {
+            if (!shortcutsPopup.contains(e.target) && e.target !== btnShortcutsToggle && !btnShortcutsToggle.contains(e.target)) {
+                shortcutsPopup.classList.remove('active');
+            }
+        }
+    });
 });
