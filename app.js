@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const switchSnap = document.getElementById('switch-snap');
     
     const btnSlice = document.getElementById('btn-slice');
+    const btnAutoDetect = document.getElementById('btn-auto-detect');
     const btnGenBoxes = document.getElementById('btn-gen-boxes');
     const btnClearBoxes = document.getElementById('btn-clear-boxes');
     const btnDownloadZip = document.getElementById('btn-download-zip');
@@ -83,6 +84,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Result Management State ---
     let resultIdCounter = 1;
+    let globalTargetW = null;
+    let globalTargetH = null;
 
     // --- Zoom and Pan State ---
     let zoomScale = 1.0;
@@ -151,6 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
             controlsBoxMode.classList.remove('active');
             
             if (currentImage) {
+                btnAutoDetect.style.display = 'flex';
                 tipText.innerHTML = "Mẹo: Bạn có thể kéo thả các đường lưới màu xanh để thay đổi kích thước các ô.";
                 gridModeText.textContent = isCustomGrid ? "Tùy chỉnh" : "Chia đều";
                 gridModeText.style.color = isCustomGrid ? "var(--accent)" : "var(--text-secondary)";
@@ -162,6 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
             controlsBoxMode.classList.add('active');
             
             if (currentImage) {
+                btnAutoDetect.style.display = 'none';
                 tipText.innerHTML = "Mẹo: Nhấp kéo chuột trên ảnh để vẽ khung tự do.";
                 gridModeText.textContent = `Tự do (${selectionBoxes.length} khung)`;
                 gridModeText.style.color = "var(--success)";
@@ -1301,6 +1306,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 imgDimOriginal.textContent = `${img.naturalWidth} x ${img.naturalHeight} px`;
                 
                 btnSlice.disabled = false;
+                btnAutoDetect.disabled = false;
                 btnGenBoxes.disabled = false;
                 btnClearBoxes.disabled = false;
                 
@@ -1487,7 +1493,200 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.restore();
     }
 
+    // --- Smart Self-Adaptive Auto-Detect Grid Borders Algorithm ---
 
+    // --- Smart Self-Adaptive Auto-Detect Grid Borders Algorithm ---
+    btnAutoDetect.addEventListener('click', () => {
+        if (!currentImage) return;
+
+        const rows = parseInt(inputRows.value) || 1;
+        const cols = parseInt(inputCols.value) || 1;
+        const width = currentImage.naturalWidth;
+        const height = currentImage.naturalHeight;
+
+        const hiddenCanvas = document.createElement('canvas');
+        hiddenCanvas.width = width;
+        hiddenCanvas.height = height;
+        const hiddenCtx = hiddenCanvas.getContext('2d');
+        hiddenCtx.drawImage(currentImage, 0, 0);
+
+        try {
+            const imgData = hiddenCtx.getImageData(0, 0, width, height);
+            const pixels = imgData.data;
+
+            // Đếm pixel sáng (trắng) và pixel tối (đen) trên từng hàng/cột
+            const colWhiteCount = new Array(width).fill(0);
+            const colBlackCount = new Array(width).fill(0);
+            const rowWhiteCount = new Array(height).fill(0);
+            const rowBlackCount = new Array(height).fill(0);
+
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const idx = (y * width + x) * 4;
+                    const r = pixels[idx];
+                    const g = pixels[idx + 1];
+                    const b = pixels[idx + 2];
+                    
+                    // Pixel sáng (vạch phân cách trắng)
+                    if (r > 225 && g > 225 && b > 225) {
+                        colWhiteCount[x]++;
+                        rowWhiteCount[y]++;
+                    }
+                    // Pixel tối (vạch phân cách đen)
+                    else if (r < 35 && g < 35 && b < 35) {
+                        colBlackCount[x]++;
+                        rowBlackCount[y]++;
+                    }
+                }
+            }
+
+            // Quyết định chế độ quét phân cách sáng hay tối dựa trên số lượng nổi bật
+            const totalWhiteCols = colWhiteCount.reduce((a, b) => a + b, 0);
+            const totalBlackCols = colBlackCount.reduce((a, b) => a + b, 0);
+            const useWhiteCols = totalWhiteCols >= totalBlackCols;
+
+            const totalWhiteRows = rowWhiteCount.reduce((a, b) => a + b, 0);
+            const totalBlackRows = rowBlackCount.reduce((a, b) => a + b, 0);
+            const useWhiteRows = totalWhiteRows >= totalBlackRows;
+
+            const targetColCounts = useWhiteCols ? colWhiteCount : colBlackCount;
+            const targetRowCounts = useWhiteRows ? rowWhiteCount : rowBlackCount;
+
+            // Tìm điểm số cao nhất cho cột & hàng
+            let maxColScore = 0;
+            for (let i = 0; i < targetColCounts.length; i++) {
+                if (targetColCounts[i] > maxColScore) maxColScore = targetColCounts[i];
+            }
+
+            let maxRowScore = 0;
+            for (let j = 0; j < targetRowCounts.length; j++) {
+                if (targetRowCounts[j] > maxRowScore) maxRowScore = targetRowCounts[j];
+            }
+
+            // Tính toán ngưỡng động (Dynamic Threshold)
+            // Cột/Hàng phải có ít nhất 40% kích thước ảnh trùng màu và đạt 75% điểm số cao nhất
+            const colThreshold = Math.max(height * 0.4, maxColScore * 0.75);
+            const rowThreshold = Math.max(width * 0.4, maxRowScore * 0.75);
+
+            // Hàm trích xuất dải phân cách
+            const extractSeparators = (counts, threshold, maxLen) => {
+                const separators = [];
+                let inSeparator = false;
+                let separatorStart = 0;
+
+                for (let idx = 0; idx < maxLen; idx++) {
+                    const isSepLine = counts[idx] >= threshold;
+                    if (isSepLine) {
+                        if (!inSeparator) {
+                            inSeparator = true;
+                            separatorStart = idx;
+                        }
+                    } else {
+                        if (inSeparator) {
+                            inSeparator = false;
+                            const separatorEnd = idx - 1;
+                            const center = Math.round((separatorStart + separatorEnd) / 2);
+                            const widthOfSeparator = separatorEnd - separatorStart + 1;
+                            
+                            // Bỏ qua dải phân cách sát lề biên ảnh (dưới 3% kích thước ảnh)
+                            const margin = maxLen * 0.03;
+                            if (center > margin && center < maxLen - margin) {
+                                separators.push({
+                                    center: center,
+                                    width: widthOfSeparator
+                                });
+                            }
+                        }
+                    }
+                }
+
+                if (inSeparator) {
+                    const center = Math.round((separatorStart + maxLen - 1) / 2);
+                    const margin = maxLen * 0.03;
+                    if (center < maxLen - margin) {
+                        separators.push({ center: center, width: maxLen - separatorStart });
+                    }
+                }
+
+                return separators;
+            };
+
+            let detectedCols = extractSeparators(targetColCounts, colThreshold, width);
+            let detectedRows = extractSeparators(targetRowCounts, rowThreshold, height);
+
+            // --- Bộ lọc khử nhiễu (Noise Filtering) dựa trên khoảng cách tối thiểu giữa các slide ---
+            // Đảm bảo các đường phân chia slide phải cách nhau tối thiểu 12% kích thước ảnh
+            const filterNoiseSeparators = (seps, maxLen, neededCount) => {
+                if (seps.length <= neededCount) return seps;
+                
+                // Ưu tiên các dải phân cách có độ rộng lớn hơn (rãnh cắt thực tế)
+                seps.sort((a, b) => b.width - a.width);
+
+                const result = [];
+                const minDistance = maxLen * 0.12; 
+
+                for (let i = 0; i < seps.length; i++) {
+                    const candidate = seps[i];
+                    const isTooClose = result.some(selected => Math.abs(selected.center - candidate.center) < minDistance);
+                    if (!isTooClose) {
+                        result.push(candidate);
+                        if (result.length === neededCount) break;
+                    }
+                }
+                
+                return result;
+            };
+
+            const neededColsCount = cols - 1;
+            let updatedCols = [];
+            if (neededColsCount > 0) {
+                const filteredCols = filterNoiseSeparators(detectedCols, width, neededColsCount);
+                if (filteredCols.length === neededColsCount) {
+                    updatedCols = filteredCols.map(item => item.center).sort((a, b) => a - b);
+                } else {
+                    // Fallback chia đều nếu không phát hiện đủ số lượng dải phân cách hợp lệ
+                    for (let i = 1; i < cols; i++) {
+                        updatedCols.push((width / cols) * i);
+                    }
+                }
+            }
+
+            const neededRowsCount = rows - 1;
+            let updatedRows = [];
+            if (neededRowsCount > 0) {
+                const filteredRows = filterNoiseSeparators(detectedRows, height, neededRowsCount);
+                if (filteredRows.length === neededRowsCount) {
+                    updatedRows = filteredRows.map(item => item.center).sort((a, b) => a - b);
+                } else {
+                    for (let j = 1; j < rows; j++) {
+                        updatedRows.push((height / rows) * j);
+                    }
+                }
+            }
+
+            colsX = updatedCols;
+            rowsY = updatedRows;
+            
+            isCustomGrid = true;
+            gridModeText.textContent = "Tự động căn (Auto-Detect)";
+            gridModeText.style.color = "var(--success)";
+
+            handleParamsChange();
+            
+            previewCanvas.animate([
+                { boxShadow: '0 10px 30px rgba(0, 0, 0, 0.5)' },
+                { boxShadow: '0 0 25px var(--success)' },
+                { boxShadow: '0 10px 30px rgba(0, 0, 0, 0.5)' }
+            ], {
+                duration: 800,
+                iterations: 1
+            });
+
+        } catch (error) {
+            console.error("Auto detect failed: ", error);
+            alert("Không thể quét ảnh tự động. Bạn vẫn có thể dùng chuột kéo thả trực tiếp các đường lưới màu xanh để căn chỉnh thủ công!");
+        }
+    });
 
 
     btnGenBoxes.addEventListener('click', () => {
@@ -1544,11 +1743,24 @@ document.addEventListener('DOMContentLoaded', () => {
         if (btnMobilePreview) btnMobilePreview.style.display = 'inline-flex';
         if (btnDownloadZip) btnDownloadZip.style.display = 'inline-flex';
 
+        const tempCanvas = document.createElement('canvas');
+        const tempCtx = tempCanvas.getContext('2d');
+
         if (slicingMode === 'grid') {
             const rows = parseInt(inputRows.value) || 1;
             const cols = parseInt(inputCols.value) || 1;
             const boundariesX = [0, ...colsX, width];
             const boundariesY = [0, ...rowsY, height];
+
+            const firstCellW = boundariesX[1] - boundariesX[0];
+            const firstCellH = boundariesY[1] - boundariesY[0];
+            const currentTargetW = firstCellW - (2 * offset);
+            const currentTargetH = firstCellH - (2 * offset);
+
+            if (slicedImages.length === 0) {
+                globalTargetW = currentTargetW;
+                globalTargetH = currentTargetH;
+            }
 
             const totalNewCells = rows * cols;
             let count = 1;
@@ -1574,7 +1786,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     const resultId = resultIdCounter++;
                     const sliceName = `slide_${startIndex + count}.png`;
-                    processSlice(sx, sy, cropW, cropH, sliceName, resultId);
+                    processSlice(tempCanvas, tempCtx, sx, sy, cropW, cropH, sliceName, resultId, globalTargetW, globalTargetH);
                     count++;
                 }
             }
@@ -1582,6 +1794,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (selectionBoxes.length === 0) {
                 alert('Vui lòng vẽ ít nhất 1 khung cắt tự do trên ảnh!');
                 return;
+            }
+
+            const currentTargetW = selectionBoxes[0].w - (2 * offset);
+            const currentTargetH = selectionBoxes[0].h - (2 * offset);
+
+            if (slicedImages.length === 0) {
+                globalTargetW = currentTargetW;
+                globalTargetH = currentTargetH;
             }
 
             selectionBoxes.forEach((box, idx) => {
@@ -1597,7 +1817,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const resultId = resultIdCounter++;
                 const sliceName = `slide_${startIndex + idx + 1}.png`;
-                processSlice(sx, sy, cropW, cropH, sliceName, resultId);
+                processSlice(tempCanvas, tempCtx, sx, sy, cropW, cropH, sliceName, resultId, globalTargetW, globalTargetH);
             });
         }
 
@@ -1614,18 +1834,20 @@ document.addEventListener('DOMContentLoaded', () => {
         switchTab('tab-result-grid');
     });
 
-    function processSlice(sx, sy, cropW, cropH, sliceName, resultId) {
-        const tempCanvas = document.createElement('canvas');
-        const tempCtx = tempCanvas.getContext('2d');
-        tempCanvas.width = cropW;
-        tempCanvas.height = cropH;
-        tempCtx.clearRect(0, 0, cropW, cropH);
-
-        // Bật khử răng cưa chất lượng cao nhất của trình duyệt
+    function processSlice(tempCanvas, tempCtx, sx, sy, cropW, cropH, sliceName, resultId, targetW, targetH) {
+        tempCanvas.width = targetW;
+        tempCanvas.height = targetH;
         tempCtx.imageSmoothingEnabled = true;
         tempCtx.imageSmoothingQuality = 'high';
+        tempCtx.clearRect(0, 0, targetW, targetH);
 
-        tempCtx.drawImage(currentImage, sx, sy, cropW, cropH, 0, 0, cropW, cropH);
+        const scale = Math.max(targetW / cropW, targetH / cropH);
+        const sourceW = targetW / scale;
+        const sourceH = targetH / scale;
+        const sourceX = sx + (cropW - sourceW) / 2;
+        const sourceY = sy + (cropH - sourceH) / 2;
+
+        tempCtx.drawImage(currentImage, sourceX, sourceY, sourceW, sourceH, 0, 0, targetW, targetH);
 
         const dataUrl = tempCanvas.toDataURL('image/png');
         slicedImages.push({ id: resultId, name: sliceName, dataUrl: dataUrl });
@@ -1663,6 +1885,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (btnClearResults) btnClearResults.style.display = 'none';
                 if (btnRenumberResults) btnRenumberResults.style.display = 'none';
                 if (btnMobilePreview) btnMobilePreview.style.display = 'none';
+                globalTargetW = null;
+                globalTargetH = null;
             } else {
                 const colsCount = Math.min(4, Math.ceil(Math.sqrt(total)));
                 resultGrid.style.gridTemplateColumns = `repeat(${colsCount}, 1fr)`;
@@ -2160,6 +2384,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         isSnapEnabled = true;
         resultIdCounter = 1;
+        globalTargetW = null;
+        globalTargetH = null;
         if (btnDownloadZip) btnDownloadZip.style.display = 'none';
         if (btnClearResults) btnClearResults.style.display = 'none';
         if (btnRenumberResults) btnRenumberResults.style.display = 'none';
@@ -2173,6 +2399,7 @@ document.addEventListener('DOMContentLoaded', () => {
         fileInfo.style.display = 'none';
         
         btnSlice.disabled = true;
+        btnAutoDetect.disabled = true;
         btnGenBoxes.disabled = true;
         btnClearBoxes.disabled = true;
         btnDownloadZip.disabled = true;
