@@ -1339,8 +1339,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 selectionBoxes = [];
                 nextBoxId = 1;
                 
-                handleParamsChange();
-                setSlicingMode(slicingMode);
+                setTimeout(() => {
+                    handleParamsChange();
+                    setSlicingMode(slicingMode);
+                }, 50);
             };
             img.src = event.target.result;
         };
