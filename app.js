@@ -97,6 +97,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedBoxIdx = -1;
     let panStart = { x: 0, y: 0 };
 
+    // Precision drag variables (Alt key slowdown)
+    let lastDragMouseX = 0;
+    let lastDragMouseY = 0;
+
     // Constants
     const dragTolerancePx = 14; // Screen pixels tolerance to grab a grid line
     const boxHandleSize = 10;    // Size of the resize handle at bottom-right of selection boxes
@@ -783,16 +787,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (slicingMode === 'grid') {
             if (dragTarget) {
+                let deltaX = imgX - lastDragMouseX;
+                let deltaY = imgY - lastDragMouseY;
+                if (e.altKey) {
+                    deltaX *= 0.15; // Hãm chậm 6.6 lần khi giữ Alt
+                    deltaY *= 0.15;
+                }
+
                 if (dragTarget.type === 'col') {
                     const idx = dragTarget.index;
                     const minLimit = (idx === 0) ? 0 : colsX[idx - 1];
                     const maxLimit = (idx === colsX.length - 1) ? currentImage.naturalWidth : colsX[idx + 1];
-                    colsX[idx] = Math.max(minLimit + 20, Math.min(maxLimit - 20, imgX));
+                    colsX[idx] = Math.max(minLimit + 20, Math.min(maxLimit - 20, colsX[idx] + deltaX));
                 } else if (dragTarget.type === 'row') {
                     const idx = dragTarget.index;
                     const minLimit = (idx === 0) ? 0 : rowsY[idx - 1];
                     const maxLimit = (idx === rowsY.length - 1) ? currentImage.naturalHeight : rowsY[idx + 1];
-                    rowsY[idx] = Math.max(minLimit + 20, Math.min(maxLimit - 20, imgY));
+                    rowsY[idx] = Math.max(minLimit + 20, Math.min(maxLimit - 20, rowsY[idx] + deltaY));
                 }
 
                 isCustomGrid = true;
@@ -838,16 +849,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 drawLiveGrid();
             } else if (dragBoxTarget) {
                 const box = selectionBoxes[dragBoxTarget.boxIndex];
+                let deltaX = imgX - lastDragMouseX;
+                let deltaY = imgY - lastDragMouseY;
+                if (e.altKey) {
+                    deltaX *= 0.15;
+                    deltaY *= 0.15;
+                }
                 
                 if (dragBoxTarget.actionType === 'move') {
-                    const dx = imgX - dragBoxTarget.startX;
-                    const dy = imgY - dragBoxTarget.startY;
-                    
-                    let newX = dragBoxTarget.originalBox.x + dx;
-                    let newY = dragBoxTarget.originalBox.y + dy;
+                    let newX = box.x + deltaX;
+                    let newY = box.y + deltaY;
 
-                    // Áp dụng Smart Snap
-                    const snapped = applyMoveSnapping(newX, newY, box.w, box.h, dragBoxTarget.boxIndex);
+                    // Áp dụng Smart Snap (Tạm tắt snap khi nhấn Alt để căn chỉnh chi tiết)
+                    const snapped = e.altKey ? { x: newX, y: newY } : applyMoveSnapping(newX, newY, box.w, box.h, dragBoxTarget.boxIndex);
                     newX = snapped.x;
                     newY = snapped.y;
 
@@ -857,15 +871,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     box.x = newX;
                     box.y = newY;
                 } else if (dragBoxTarget.actionType === 'resize-br') {
-                    let newW = imgX - box.x;
-                    let newH = imgY - box.y;
+                    let newW = box.w + deltaX;
+                    let newH = box.h + deltaY;
 
                     if (lockedRatio) {
                         newH = newW / lockedRatio;
                     }
 
-                    // Áp dụng Smart Snap
-                    const snapped = applyResizeSnapping(box.x, box.y, newW, newH, dragBoxTarget.boxIndex);
+                    // Áp dụng Smart Snap (Tạm tắt snap khi nhấn Alt)
+                    const snapped = e.altKey ? { w: newW, h: newH } : applyResizeSnapping(box.x, box.y, newW, newH, dragBoxTarget.boxIndex);
                     newW = snapped.w;
                     newH = snapped.h;
 
@@ -908,6 +922,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         }
+
+        // Cập nhật vị trí chuột cuối cùng cho frame tiếp theo
+        lastDragMouseX = imgX;
+        lastDragMouseY = imgY;
     });
 
     previewCanvas.addEventListener('mousedown', (e) => {
@@ -923,6 +941,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const coords = getNaturalCoords(e.clientX, e.clientY);
         const imgX = coords.x;
         const imgY = coords.y;
+
+        // Lưu trữ tọa độ chuột bắt đầu kéo
+        lastDragMouseX = imgX;
+        lastDragMouseY = imgY;
 
         if (slicingMode === 'grid') {
             const target = findNearestGridLine(e.clientX, e.clientY);
