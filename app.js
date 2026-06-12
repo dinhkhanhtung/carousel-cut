@@ -69,6 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let colsX = [];        // X coordinates of vertical grid lines. Length: cols - 1
     let rowsY = [];        // Y coordinates of horizontal grid lines. Length: rows - 1
     let isCustomGrid = false; 
+    let dragTarget = null;  // Current grid line being dragged 
 
     // --- Mode 2: Box Mode Variables ---
     let selectionBoxes = []; // Array of { id, x, y, w, h } in original image space
