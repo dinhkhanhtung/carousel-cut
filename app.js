@@ -1305,6 +1305,24 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Xóa sạch kết quả cũ khi tải ảnh mới lên để tránh trộn lẫn và lệch kích thước
+        slicedImages = [];
+        slicedBlobs = [];
+        resultGrid.innerHTML = '';
+        resultCount.textContent = '0';
+        if (resultCountBadge) {
+            resultCountBadge.textContent = '0';
+        }
+        globalTargetW = null;
+        globalTargetH = null;
+        if (btnDownloadZip) {
+            btnDownloadZip.disabled = true;
+            btnDownloadZip.style.display = 'none';
+        }
+        if (btnClearResults) btnClearResults.style.display = 'none';
+        if (btnRenumberResults) btnRenumberResults.style.display = 'none';
+        if (btnMobilePreview) btnMobilePreview.style.display = 'none';
+
         fileName.textContent = file.name || 'Ảnh từ Clipboard';
         fileSize.textContent = file.size ? `(${(file.size / 1024).toFixed(1)} KB)` : '';
         dropzonePrompt.style.display = 'none';
@@ -1818,6 +1836,13 @@ document.addEventListener('DOMContentLoaded', () => {
     btnSlice.addEventListener('click', () => {
         if (!currentImage) return;
 
+        // Xóa sạch kết quả cũ của lần cắt trước để tránh trộn lẫn & lệch kích thước
+        slicedImages = [];
+        slicedBlobs = [];
+        resultGrid.innerHTML = '';
+        globalTargetW = null;
+        globalTargetH = null;
+
         const offset = parseInt(inputOffset.value) || 0;
         const width = currentImage.naturalWidth;
         const height = currentImage.naturalHeight;
@@ -1833,7 +1858,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         // Bắt đầu từ vị trí tiếp nối (số ảnh kết quả hiện tại)
-        const startIndex = slicedImages.length;
+        const startIndex = 0;
         
         if (btnClearResults) btnClearResults.style.display = 'inline-flex';
         if (btnRenumberResults) btnRenumberResults.style.display = 'inline-flex';
