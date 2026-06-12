@@ -2960,49 +2960,72 @@ Provide ONLY the final prompt for Imagen 3 in English. Do not write any other ex
         return data.candidates[0].content.parts[0].text.trim();
     }
 
-    // Hàm gọi Imagen 3.0 để sinh ảnh dạng base64
+    // Hàm gọi Imagen 3.0 để sinh ảnh (tự động fallback sang mô hình Flux nếu lỗi)
     async function callGeminiImagenToDrawImage(apiKey, prompt, cardCount) {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
+        // Thử dùng Imagen 3.0 của Google trước (phiên bản imagen-3.0-generate-001)
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict?key=${apiKey}`;
         
+        let width = 1024;
+        let height = 1024;
         let aspectRatio = '1:1';
+        
         if (cardCount === 6) {
             aspectRatio = '3:2';
+            width = 1200; height = 800;
         } else if (cardCount === 9) {
             aspectRatio = '1:1';
+            width = 1024; height = 1024;
         } else if (cardCount === 12 || cardCount === 15) {
             aspectRatio = '3:4';
+            width = 800; height = 1200;
         }
 
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                instances: [
-                    {
-                        prompt: prompt
+        try {
+            console.log("Thử tạo ảnh bằng Google Imagen 3.0 (v1beta)...");
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    instances: [
+                        {
+                            prompt: prompt
+                        }
+                    ],
+                    parameters: {
+                        sampleCount: 1,
+                        aspectRatio: aspectRatio,
+                        outputMimeType: 'image/jpeg'
                     }
-                ],
-                parameters: {
-                    sampleCount: 1,
-                    aspectRatio: aspectRatio,
-                    outputMimeType: 'image/jpeg'
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.predictions && data.predictions.length > 0) {
+                    console.log("Tạo ảnh bằng Google Imagen 3.0 thành công!");
+                    const base64ImageBytes = data.predictions[0].bytesBase64Encoded;
+                    return `data:image/jpeg;base64,${base64ImageBytes}`;
                 }
-            })
-        });
-
-        if (!response.ok) {
-            const errData = await response.json();
-            throw new Error(errData.error?.message || 'Không thể gọi API Imagen 3.');
+            }
+            console.warn("Imagen API trả về lỗi hoặc không có ảnh. Tự động chuyển sang mô hình Flux...");
+        } catch (e) {
+            console.warn("Không thể gọi Imagen 3.0, tự động chuyển đổi sang Flux:", e);
         }
 
-        const data = await response.json();
-        if (!data.predictions || data.predictions.length === 0) {
-            throw new Error('Không nhận được ảnh phản hồi từ Imagen 3.0.');
+        // Fallback sang mô hình Flux (Pollinations AI) - Miễn phí, không giới hạn quyền và chất lượng siêu cao
+        console.log("Bắt đầu tạo ảnh bằng mô hình Flux...");
+        const seed = Math.floor(Math.random() * 1000000);
+        const enhancedPrompt = `${prompt}, digital art style, ultra-detailed, 8k resolution, cinematic lighting`;
+        const fluxUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(enhancedPrompt)}?width=${width}&height=${height}&model=flux&nologo=true&seed=${seed}`;
+        
+        // Xác thực kết nối
+        const testRes = await fetch(fluxUrl);
+        if (!testRes.ok) {
+            throw new Error("Không thể tạo ảnh bằng cả Google Imagen 3 và mô hình Flux.");
         }
-        const base64ImageBytes = data.predictions[0].bytesBase64Encoded;
-        return `data:image/jpeg;base64,${base64ImageBytes}`;
+        return fluxUrl;
     }
 
     // Shortcuts Helper UI Click Listeners
