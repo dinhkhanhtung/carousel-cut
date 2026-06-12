@@ -1835,11 +1835,32 @@ document.addEventListener('DOMContentLoaded', () => {
         if (btnMobilePreview) btnMobilePreview.style.display = 'inline-flex';
         if (btnDownloadZip) btnDownloadZip.style.display = 'inline-flex';
 
+        let targetW, targetH;
+
         if (slicingMode === 'grid') {
             const rows = parseInt(inputRows.value) || 1;
             const cols = parseInt(inputCols.value) || 1;
             const boundariesX = [0, ...colsX, width];
             const boundariesY = [0, ...rowsY, height];
+
+            // Xác định kích thước canvas đích chung từ ô đầu tiên
+            const firstCellW = boundariesX[1] - boundariesX[0];
+            const firstCellH = boundariesY[1] - boundariesY[0];
+            const firstCropW = firstCellW - (2 * offset);
+            const firstCropH = firstCellH - (2 * offset);
+
+            if (firstCropW <= 0 || firstCropH <= 0) {
+                alert("Kích thước ô lưới đầu tiên sau khi xén viền nhỏ hơn 0. Hãy giảm Offset!");
+                return;
+            }
+
+            if (!globalTargetW || !globalTargetH) {
+                const scale = getExportScale(firstCropW);
+                globalTargetW = Math.round(firstCropW * scale);
+                globalTargetH = Math.round(firstCropH * scale);
+            }
+            targetW = globalTargetW;
+            targetH = globalTargetH;
 
             const totalNewCells = rows * cols;
             let count = 1;
@@ -1863,10 +1884,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         return;
                     }
 
-                    const scale = getExportScale(cropW);
-                    const targetW = Math.round(cropW * scale);
-                    const targetH = Math.round(cropH * scale);
-
                     const resultId = resultIdCounter++;
                     const sliceName = `slide_${startIndex + count}.png`;
                     processSlice(sx, sy, cropW, cropH, sliceName, resultId, targetW, targetH);
@@ -1879,6 +1896,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
+            // Xác định kích thước canvas đích chung từ khung đầu tiên
+            const firstBox = selectionBoxes[0];
+            const firstCropW = firstBox.w - (2 * offset);
+            const firstCropH = firstBox.h - (2 * offset);
+
+            if (firstCropW <= 0 || firstCropH <= 0) {
+                alert("Kích thước khung vẽ đầu tiên sau khi xén viền nhỏ hơn 0. Hãy giảm Offset!");
+                return;
+            }
+
+            if (!globalTargetW || !globalTargetH) {
+                const scale = getExportScale(firstCropW);
+                globalTargetW = Math.round(firstCropW * scale);
+                globalTargetH = Math.round(firstCropH * scale);
+            }
+            targetW = globalTargetW;
+            targetH = globalTargetH;
+
             selectionBoxes.forEach((box, idx) => {
                 const sx = box.x + offset;
                 const sy = box.y + offset;
@@ -1889,10 +1924,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     alert(`Kích thước Khung ${box.id} sau khi xén viền nhỏ hơn 0. Hãy giảm Offset hoặc co dãn khung lớn hơn!`);
                     return;
                 }
-
-                const scale = getExportScale(cropW);
-                const targetW = Math.round(cropW * scale);
-                const targetH = Math.round(cropH * scale);
 
                 const resultId = resultIdCounter++;
                 const sliceName = `slide_${startIndex + idx + 1}.png`;
