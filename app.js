@@ -20,11 +20,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const selectRatio = document.getElementById('select-ratio');
     const ratioControlItem = document.getElementById('ratio-control-item');
-    const ratioHelpText = document.getElementById('ratio-help-text');
     const selectExportScale = document.getElementById('select-export-scale');
     const selectGridType = document.getElementById('select-grid-type');
     const gridTypeControlItem = document.getElementById('grid-type-control-item');
-    const gridTypeHelpText = document.getElementById('grid-type-help-text');
     const gridEvenParameters = document.getElementById('grid-even-parameters');
     const switchUniform = document.getElementById('switch-uniform');
     const switchSnap = document.getElementById('switch-snap');
@@ -197,11 +195,9 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (selectRatio) selectRatio.disabled = true;
             if (ratioControlItem) ratioControlItem.classList.add('disabled');
-            if (ratioHelpText) ratioHelpText.style.display = 'block';
 
             if (selectGridType) selectGridType.disabled = false;
             if (gridTypeControlItem) gridTypeControlItem.classList.remove('disabled');
-            if (gridTypeHelpText) gridTypeHelpText.style.display = 'none';
 
             if (currentImage) {
                 if (btnAutoDetect) btnAutoDetect.style.display = 'flex';
@@ -217,11 +213,9 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (selectRatio) selectRatio.disabled = false;
             if (ratioControlItem) ratioControlItem.classList.remove('disabled');
-            if (ratioHelpText) ratioHelpText.style.display = 'none';
 
             if (selectGridType) selectGridType.disabled = true;
             if (gridTypeControlItem) gridTypeControlItem.classList.add('disabled');
-            if (gridTypeHelpText) gridTypeHelpText.style.display = 'block';
 
             if (currentImage) {
                 if (btnAutoDetect) btnAutoDetect.style.display = 'none';
