@@ -25,6 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const switchUniform = document.getElementById('switch-uniform');
     const switchSnap = document.getElementById('switch-snap');
     const inputCropBottom = document.getElementById('input-crop-bottom');
+    const inputCropBottomNumber = document.getElementById('input-crop-bottom-number');
     const cropBottomValueText = document.getElementById('crop-bottom-value');
     
     const btnSlice = document.getElementById('btn-slice');
@@ -518,6 +519,30 @@ document.addEventListener('DOMContentLoaded', () => {
     if (inputCropBottom) {
         inputCropBottom.addEventListener('input', () => {
             cropBottomPercent = parseInt(inputCropBottom.value) || 0;
+            if (cropBottomValueText) {
+                cropBottomValueText.textContent = `${cropBottomPercent}%`;
+            }
+            if (inputCropBottomNumber && parseInt(inputCropBottomNumber.value) !== cropBottomPercent) {
+                inputCropBottomNumber.value = cropBottomPercent;
+            }
+            if (currentImage) {
+                if (slicingMode === 'grid' && gridType === 'even') {
+                    resetGridToEven();
+                }
+                drawLiveGrid();
+            }
+        });
+    }
+
+    if (inputCropBottomNumber) {
+        inputCropBottomNumber.addEventListener('input', () => {
+            let val = parseInt(inputCropBottomNumber.value) || 0;
+            val = Math.max(0, Math.min(50, val));
+            inputCropBottomNumber.value = val;
+            if (inputCropBottom && parseInt(inputCropBottom.value) !== val) {
+                inputCropBottom.value = val;
+            }
+            cropBottomPercent = val;
             if (cropBottomValueText) {
                 cropBottomValueText.textContent = `${cropBottomPercent}%`;
             }
@@ -1627,6 +1652,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 cropBottomPercent = 0;
                 if (inputCropBottom) inputCropBottom.value = 0;
+                if (inputCropBottomNumber) inputCropBottomNumber.value = 0;
                 if (cropBottomValueText) cropBottomValueText.textContent = '0%';
 
                 resetGridToEven();
@@ -3323,6 +3349,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (inputCropBottom) {
             inputCropBottom.value = 0;
         }
+        if (inputCropBottomNumber) {
+            inputCropBottomNumber.value = 0;
+        }
         if (cropBottomValueText) {
             cropBottomValueText.textContent = '0%';
         }
@@ -4026,6 +4055,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (inputOffset) {
                 inputOffset.value = proj.offset_val || 0;
                 if (offsetNumberVal) offsetNumberVal.value = proj.offset_val || 0;
+            }
+            if (inputCropBottom) {
+                inputCropBottom.value = 0;
+                cropBottomPercent = 0;
+                if (inputCropBottomNumber) inputCropBottomNumber.value = 0;
+                if (cropBottomValueText) cropBottomValueText.textContent = '0%';
             }
             if (switchUniform) {
                 switchUniform.checked = proj.switch_uniform;
