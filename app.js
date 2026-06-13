@@ -2795,6 +2795,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Focus vào slide đầu tiên
             mobileCarouselSlider.scrollLeft = 0;
+            currentSlideIndex = 0;
             updateActiveDot(0);
         });
     }
@@ -2838,36 +2839,109 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Hỗ trợ kéo thả bằng chuột để vuốt slide (Mouse drag scroll)
-    let isDown = false;
-    let startX;
-    let scrollLeft;
+    // Hỗ trợ vuốt chuyển slide nhạy bén (Touch & Mouse swipe)
+    let isDragging = false;
+    let dragStartX = 0;
+    let dragStartScrollLeft = 0;
+    let dragStartTime = 0;
+    let currentSlideIndex = 0;
+
+    const getClientX = (e) => {
+        return e.touches ? e.touches[0].clientX : e.clientX;
+    };
+
+    const handleSwipeStart = (e) => {
+        if (!mobileCarouselSlider) return;
+        isDragging = true;
+        dragStartX = getClientX(e);
+        dragStartScrollLeft = mobileCarouselSlider.scrollLeft;
+        dragStartTime = Date.now();
+        
+        mobileCarouselSlider.style.scrollSnapType = 'none';
+        mobileCarouselSlider.style.scrollBehavior = 'auto';
+    };
+
+    const handleSwipeMove = (e) => {
+        if (!isDragging || !mobileCarouselSlider) return;
+        
+        // Ngăn chặn cuộn dọc màn hình ngoài ý muốn khi đang vuốt slide
+        if (e.cancelable) e.preventDefault();
+        
+        const currentX = getClientX(e);
+        const dx = currentX - dragStartX;
+        
+        mobileCarouselSlider.scrollLeft = dragStartScrollLeft - dx;
+    };
+
+    const handleSwipeEnd = (e) => {
+        if (!isDragging || !mobileCarouselSlider) return;
+        isDragging = false;
+        
+        let endX = dragStartX;
+        if (e.changedTouches && e.changedTouches.length > 0) {
+            endX = e.changedTouches[0].clientX;
+        } else if (e.clientX) {
+            endX = e.clientX;
+        }
+        
+        const dx = endX - dragStartX;
+        const duration = Date.now() - dragStartTime;
+        const slideWidth = mobileCarouselSlider.clientWidth || 1;
+        const totalSlides = mobileCarouselSlider.children.length;
+        
+        mobileCarouselSlider.style.scrollBehavior = 'smooth';
+        
+        let targetIndex = currentSlideIndex;
+        
+        // Vuốt nhanh (Flick) < 250ms & cự ly tối thiểu 30px
+        if (duration < 250 && Math.abs(dx) > 30) {
+            if (dx < 0) {
+                targetIndex = Math.min(totalSlides - 1, currentSlideIndex + 1);
+            } else {
+                targetIndex = Math.max(0, currentSlideIndex - 1);
+            }
+        } 
+        // Kéo chậm nhưng vượt quá 20% slide
+        else if (Math.abs(dx) > slideWidth * 0.20) {
+            if (dx < 0) {
+                targetIndex = Math.min(totalSlides - 1, currentSlideIndex + 1);
+            } else {
+                targetIndex = Math.max(0, currentSlideIndex - 1);
+            }
+        } 
+        // Snap về slide gần nhất
+        else {
+            const currentScroll = mobileCarouselSlider.scrollLeft;
+            targetIndex = Math.round(currentScroll / slideWidth);
+        }
+        
+        targetIndex = Math.max(0, Math.min(totalSlides - 1, targetIndex));
+        
+        mobileCarouselSlider.scrollTo({
+            left: targetIndex * slideWidth,
+            behavior: 'smooth'
+        });
+        
+        currentSlideIndex = targetIndex;
+        updateActiveDot(targetIndex);
+        
+        setTimeout(() => {
+            if (mobileCarouselSlider) {
+                mobileCarouselSlider.style.scrollSnapType = 'x mandatory';
+            }
+        }, 300);
+    };
 
     if (mobileCarouselSlider) {
-        mobileCarouselSlider.addEventListener('mousedown', (e) => {
-            isDown = true;
-            mobileCarouselSlider.classList.add('active');
-            startX = e.pageX - mobileCarouselSlider.offsetLeft;
-            scrollLeft = mobileCarouselSlider.scrollLeft;
-        });
-        
-        mobileCarouselSlider.addEventListener('mouseleave', () => {
-            isDown = false;
-            mobileCarouselSlider.classList.remove('active');
-        });
-        
-        mobileCarouselSlider.addEventListener('mouseup', () => {
-            isDown = false;
-            mobileCarouselSlider.classList.remove('active');
-        });
-        
-        mobileCarouselSlider.addEventListener('mousemove', (e) => {
-            if (!isDown) return;
-            e.preventDefault();
-            const x = e.pageX - mobileCarouselSlider.offsetLeft;
-            const walk = (x - startX) * 1.5; // tốc độ scroll
-            mobileCarouselSlider.scrollLeft = scrollLeft - walk;
-        });
+        // Sự kiện chuột
+        mobileCarouselSlider.addEventListener('mousedown', handleSwipeStart);
+        window.addEventListener('mousemove', handleSwipeMove);
+        window.addEventListener('mouseup', handleSwipeEnd);
+
+        // Sự kiện cảm ứng touch
+        mobileCarouselSlider.addEventListener('touchstart', handleSwipeStart, { passive: false });
+        mobileCarouselSlider.addEventListener('touchmove', handleSwipeMove, { passive: false });
+        mobileCarouselSlider.addEventListener('touchend', handleSwipeEnd, { passive: true });
     }
 
     // --- Toggle Sidebar logic ---
