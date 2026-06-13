@@ -2141,11 +2141,22 @@ input[type="number"] {
         align-items: stretch !important;
         margin-bottom: 4px !important;
         gap: 4px !important;
+        height: 38px !important;
+        padding: 2px !important;
+        box-sizing: border-box !important;
+        margin-left: -3px !important;
+        margin-right: -3px !important;
+        background: rgba(17, 24, 39, 0.6) !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: var(--border-radius-sm) !important;
     }
     .app-container.mobile-tab-edit #sidebar .mode-btn {
-        height: 38px !important;
+        height: 100% !important;
         font-size: 0.75rem !important;
-        padding: 6px 8px !important;
+        padding: 0 8px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
     }
     .app-container.mobile-tab-edit #sidebar .control-item {
         margin-bottom: 6px !important;
