@@ -3031,6 +3031,7 @@ input[type="number"] {
     font-weight: 600;
     color: var(--text-primary);
     margin-bottom: 4px;
+    padding: 0 12px;
 }
 
 /* Project History Floating Helper (PC Only) */
@@ -3143,6 +3144,7 @@ input[type="number"] {
     flex-shrink: 0;
 }
 
+/* Mobile history header */
 .history-header {
     display: flex;
     align-items: center;
@@ -3152,6 +3154,7 @@ input[type="number"] {
     font-weight: 600;
     color: var(--text-primary);
     margin-bottom: 10px;
+    padding: 0 12px;
 }
 
 .history-header-left {
