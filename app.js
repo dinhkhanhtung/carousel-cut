@@ -341,6 +341,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const switchMobileTab = (tabId) => {
         if (!appContainer) return;
         
+        // Đóng bảng cấu hình di động khi đổi tab
+        if (sidebar) sidebar.classList.remove('active-params');
+        if (btnMobileToggleParams) {
+            btnMobileToggleParams.innerHTML = '<i class="fa-solid fa-sliders"></i> Tùy chỉnh thông số';
+            btnMobileToggleParams.classList.remove('active');
+        }
+        
         appContainer.classList.remove('mobile-tab-upload', 'mobile-tab-edit', 'mobile-tab-result');
         appContainer.classList.add(`mobile-tab-${tabId}`);
         
@@ -371,6 +378,22 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     });
+
+    // Toggle Mobile Params Sheet
+    const btnMobileToggleParams = document.getElementById('btn-mobile-toggle-params');
+    const sidebar = document.getElementById('sidebar');
+    if (btnMobileToggleParams && sidebar) {
+        btnMobileToggleParams.addEventListener('click', () => {
+            sidebar.classList.toggle('active-params');
+            if (sidebar.classList.contains('active-params')) {
+                btnMobileToggleParams.innerHTML = '<i class="fa-solid fa-chevron-down"></i> Đóng bảng tùy chỉnh';
+                btnMobileToggleParams.classList.add('active');
+            } else {
+                btnMobileToggleParams.innerHTML = '<i class="fa-solid fa-sliders"></i> Tùy chỉnh thông số';
+                btnMobileToggleParams.classList.remove('active');
+            }
+        });
+    }
 
     // --- Initialize Grid Lines (Evenly Distributed) ---
     const resetGridToEven = () => {
@@ -2626,6 +2649,32 @@ document.addEventListener('DOMContentLoaded', () => {
             
             touchStartItem = null;
             touchDragOverEl = null;
+        });
+
+        // Bổ sung sự kiện click xem ảnh full cho di động (Mobile Lightbox dùng chính modal Mobile Preview)
+        resultItem.addEventListener('click', (e) => {
+            // Tránh kích hoạt khi click vào các nút hành động con của card
+            if (e.target.closest('.result-item-btn-del') || e.target.closest('.result-item-btn-dl') || e.target.closest('.result-item-name-container')) {
+                return;
+            }
+            
+            // Nếu có chức năng xem trước trên di động
+            if (btnMobilePreview) {
+                btnMobilePreview.click(); // Kích hoạt mở modal xem thử
+                
+                // Đợi modal render xong slide, scroll tới slide tương ứng với card được click
+                setTimeout(() => {
+                    if (mobileCarouselSlider) {
+                        const targetSlideIndex = slicedImages.findIndex(item => item.id === resultId);
+                        if (targetSlideIndex !== -1) {
+                            const sliderWidth = mobileCarouselSlider.clientWidth;
+                            mobileCarouselSlider.scrollLeft = targetSlideIndex * sliderWidth;
+                            currentSlideIndex = targetSlideIndex;
+                            updateActiveDot(targetSlideIndex);
+                        }
+                    }
+                }, 100);
+            }
         });
 
         resultGrid.appendChild(resultItem);
