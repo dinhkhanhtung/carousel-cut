@@ -3438,3 +3438,13 @@ input[type="number"] {
     20%, 60% { transform: translateX(-8px); }
     40%, 80% { transform: translateX(8px); }
 }
+
+/* Animation cho nút Sync Refresh */
+@keyframes spin-refresh {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+.spinning {
+    animation: spin-refresh 0.8s linear infinite;
+    pointer-events: none;
+}

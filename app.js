@@ -3702,6 +3702,29 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Sự kiện làm mới đồng bộ lịch sử dự án đám mây
+    const triggerSyncRefresh = async (btnId) => {
+        const btn = document.getElementById(btnId);
+        if (!btn) return;
+        btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const icon = btn.querySelector('i');
+            if (icon) icon.classList.add('spinning');
+            
+            try {
+                await loadHistoryFromDB();
+            } finally {
+                if (icon) {
+                    setTimeout(() => {
+                        icon.classList.remove('spinning');
+                    }, 800); // Xoay ít nhất 0.8 giây cho hiệu ứng mượt mà
+                }
+            }
+        });
+    };
+    triggerSyncRefresh('btn-pc-sync-refresh');
+    triggerSyncRefresh('btn-mobile-sync-refresh');
+
     async function saveProjectToDB() {
         if (!supabase || !currentOriginalFile) return;
         if (!syncKey) {

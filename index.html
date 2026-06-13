@@ -31,13 +31,13 @@
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Styling -->
-    <link rel="stylesheet" href="style.css?v=2.2.0">
+    <link rel="stylesheet" href="style.css?v=2.3.0">
     <!-- JSZip Library (CDN) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
     <!-- Supabase Client Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- App Logic -->
-    <script src="app.js?v=2.2.0" defer></script>
+    <script src="app.js?v=2.3.0" defer></script>
 </head>
 <body>
     <div class="app-container mobile-tab-upload">
@@ -132,6 +132,9 @@
                                 <span>Lịch sử dự án</span>
                             </div>
                             <div class="history-header-actions">
+                                <button type="button" id="btn-mobile-sync-refresh" class="btn-history-action" title="Đồng bộ lại lịch sử đám mây">
+                                    <i class="fa-solid fa-arrows-rotate"></i>
+                                </button>
                                 <button type="button" id="btn-import-project" class="btn-history-action" title="Nhập dự án từ file (.ccut)">
                                     <i class="fa-solid fa-file-import"></i> <span>Nhập file</span>
                                 </button>
@@ -516,6 +519,9 @@
                 <div class="history-list-header-popup">
                     <span>Dự án đám mây</span>
                     <div class="history-header-actions">
+                        <button type="button" id="btn-pc-sync-refresh" class="btn-history-action" title="Đồng bộ lại lịch sử đám mây">
+                            <i class="fa-solid fa-arrows-rotate"></i>
+                        </button>
                         <button type="button" id="btn-pc-import-project" class="btn-history-action" title="Nhập dự án từ file (.ccut)">
                             <i class="fa-solid fa-file-import"></i> <span>Nhập file</span>
                         </button>
