@@ -21,8 +21,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const selectRatio = document.getElementById('select-ratio');
     const selectExportScale = document.getElementById('select-export-scale');
     const selectGridType = document.getElementById('select-grid-type');
-    const fbLayoutInfo = document.getElementById('fb-layout-info');
-    const fbLayoutDesc = document.getElementById('fb-layout-desc');
     const gridEvenParameters = document.getElementById('grid-even-parameters');
     const switchUniform = document.getElementById('switch-uniform');
     const switchSnap = document.getElementById('switch-snap');
@@ -423,17 +421,9 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (gridType === 'even') {
                 if (gridEvenParameters) gridEvenParameters.style.display = 'grid';
-                if (fbLayoutInfo) fbLayoutInfo.style.display = 'none';
                 resetGridToEven();
             } else {
                 if (gridEvenParameters) gridEvenParameters.style.display = 'none';
-                if (fbLayoutInfo) fbLayoutInfo.style.display = 'block';
-                
-                if (gridType === 'fb-1d3v') {
-                    if (fbLayoutDesc) fbLayoutDesc.innerHTML = '<strong>Bố cục 1 Dọc + 3 Vuông phải:</strong><br>Ảnh gốc sẽ chia làm 2 phần dọc (50% trái, 50% phải). Phần trái cắt 1 ảnh dọc to. Phần phải chia thành 3 ảnh nhỏ xếp chồng ngang bằng nhau.';
-                } else if (gridType === 'fb-1n3v') {
-                    if (fbLayoutDesc) fbLayoutDesc.innerHTML = '<strong>Bố cục 1 Ngang + 3 Vuông dưới:</strong><br>Ảnh gốc sẽ chia làm 2 phần ngang (50% trên, 50% dưới). Phần trên cắt 1 ảnh ngang to. Phần dưới chia thành 3 ảnh nhỏ xếp dọc bằng nhau.';
-                }
             }
             
             handleParamsChange();
