@@ -3364,126 +3364,218 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error("Supabase SDK is not loaded!");
     }
 
-    // Sync Key Generation
-    function generateSyncKey() {
-        const chars = '0123456789ABCDEF';
-        let part1 = '';
-        let part2 = '';
-        for (let i = 0; i < 4; i++) {
-            part1 += chars[Math.floor(Math.random() * chars.length)];
-            part2 += chars[Math.floor(Math.random() * chars.length)];
+    // Hàm băm mật khẩu SHA-256 bảo mật trực tiếp ở client
+    async function hashPassword(password) {
+        const msgBuffer = new TextEncoder().encode(password);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    // Biến toàn cục lưu username của tài khoản đăng nhập làm key đồng bộ
+    let syncKey = localStorage.getItem('carousel_logged_user') || '';
+
+    // Cập nhật trạng thái giao diện tài khoản (Auth UI)
+    function updateAuthUI() {
+        const pcLoggedOut = document.getElementById('pc-auth-logged-out');
+        const pcLoggedIn = document.getElementById('pc-auth-logged-in');
+        const pcUsername = document.getElementById('pc-auth-username');
+        
+        const mobileLoggedOut = document.getElementById('mobile-auth-logged-out');
+        const mobileLoggedIn = document.getElementById('mobile-auth-logged-in');
+        const mobileUsername = document.getElementById('mobile-auth-username');
+
+        if (syncKey) {
+            // Đã đăng nhập
+            if (pcLoggedOut) pcLoggedOut.style.display = 'none';
+            if (pcLoggedIn) {
+                pcLoggedIn.style.display = 'flex';
+                if (pcUsername) pcUsername.textContent = syncKey;
+            }
+
+            if (mobileLoggedOut) mobileLoggedOut.style.display = 'none';
+            if (mobileLoggedIn) {
+                mobileLoggedIn.style.display = 'flex';
+                if (mobileUsername) mobileUsername.textContent = syncKey;
+            }
+        } else {
+            // Chưa đăng nhập
+            if (pcLoggedOut) pcLoggedOut.style.display = 'flex';
+            if (pcLoggedIn) pcLoggedIn.style.display = 'none';
+
+            if (mobileLoggedOut) mobileLoggedOut.style.display = 'flex';
+            if (mobileLoggedIn) mobileLoggedIn.style.display = 'none';
+            
+            // Xóa giá trị trong input
+            const pcUserIn = document.getElementById('pc-username-input');
+            const pcPassIn = document.getElementById('pc-password-input');
+            const mobUserIn = document.getElementById('mobile-username-input');
+            const mobPassIn = document.getElementById('mobile-password-input');
+            if (pcUserIn) pcUserIn.value = '';
+            if (pcPassIn) pcPassIn.value = '';
+            if (mobUserIn) mobUserIn.value = '';
+            if (mobPassIn) mobPassIn.value = '';
         }
-        return `CC-${part1}-${part2}`;
     }
 
-    let syncKey = localStorage.getItem('carousel_sync_key');
-    if (!syncKey || !syncKey.startsWith('CC-')) {
-        syncKey = generateSyncKey();
-        localStorage.setItem('carousel_sync_key', syncKey);
-    }
+    // Xử lý logic Đăng ký tài khoản
+    async function performRegister(usernameInputId, passwordInputId) {
+        if (!supabase) return;
+        const userIn = document.getElementById(usernameInputId);
+        const passIn = document.getElementById(passwordInputId);
+        if (!userIn || !passIn) return;
 
-    // Cập nhật Sync Key lên UI
-    const pcSyncKeyVal = document.getElementById('pc-sync-key-val');
-    const mobileSyncKeyVal = document.getElementById('mobile-sync-key-val');
-    if (pcSyncKeyVal) pcSyncKeyVal.textContent = syncKey;
-    if (mobileSyncKeyVal) mobileSyncKeyVal.textContent = syncKey;
+        const username = userIn.value.trim().toLowerCase();
+        const password = passIn.value;
 
-    // PC History Floating helper events
-    const btnHistoryToggle = document.getElementById('btn-history-toggle');
-    const btnCloseHistory = document.getElementById('btn-close-history');
-    const historyPopup = document.getElementById('history-popup');
-
-    if (btnHistoryToggle && historyPopup) {
-        btnHistoryToggle.addEventListener('click', (e) => {
-            e.stopPropagation();
-            historyPopup.classList.toggle('active');
-            if (historyPopup.classList.contains('active')) {
-                loadHistoryFromDB();
-            }
-        });
-    }
-
-    if (btnCloseHistory && historyPopup) {
-        btnCloseHistory.addEventListener('click', (e) => {
-            e.stopPropagation();
-            historyPopup.classList.remove('active');
-        });
-    }
-
-    // Đóng popup khi click ra ngoài
-    document.addEventListener('click', (e) => {
-        if (historyPopup && historyPopup.classList.contains('active')) {
-            if (!historyPopup.contains(e.target) && e.target !== btnHistoryToggle && !btnHistoryToggle.contains(e.target)) {
-                historyPopup.classList.remove('active');
-            }
+        if (!username || !password) {
+            alert("Vui lòng điền đầy đủ tên đăng nhập và mật khẩu!");
+            return;
         }
-    });
 
-    // Sao chép mã Sync Key
-    const copySyncKey = (btnId) => {
-        const btn = document.getElementById(btnId);
-        if (!btn) return;
-        btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            navigator.clipboard.writeText(syncKey).then(() => {
-                const icon = btn.querySelector('i');
-                if (icon) {
-                    icon.className = 'fa-solid fa-check';
-                    icon.style.color = 'var(--success)';
-                    setTimeout(() => {
-                        icon.className = 'fa-solid fa-copy';
-                        icon.style.color = '';
-                    }, 2000);
-                }
-            }).catch(err => {
-                console.error("Failed to copy text: ", err);
-            });
-        });
-    };
-    copySyncKey('btn-copy-sync-key');
-    copySyncKey('btn-copy-mobile-sync-key');
+        const usernameRegex = /^[a-z0-9_]{3,20}$/;
+        if (!usernameRegex.test(username)) {
+            alert("Tên đăng nhập chỉ gồm chữ thường, số và dấu gạch dưới, từ 3 đến 20 ký tự!");
+            return;
+        }
 
-    // Liên kết đồng bộ thiết bị (Sync Connect)
-    const connectDevice = async (inputId, btnId) => {
-        const input = document.getElementById(inputId);
-        const btn = document.getElementById(btnId);
-        if (!input || !btn) return;
+        if (password.length < 6) {
+            alert("Mật khẩu phải dài từ 6 ký tự trở lên!");
+            return;
+        }
 
-        btn.addEventListener('click', async () => {
-            let key = input.value.trim().toUpperCase();
-            if (!key) return;
+        try {
+            // Kiểm tra xem username đã tồn tại chưa
+            const { data: existingUser, error: checkError } = await supabase
+                .from('carousel_users')
+                .select('username')
+                .eq('username', username)
+                .maybeSingle();
 
-            const regex = /^CC-[0-9A-F]{4}-[0-9A-F]{4}$/;
-            if (!regex.test(key)) {
-                if (key.length === 10 && key.startsWith('CC')) {
-                    key = `${key.substring(0, 2)}-${key.substring(2, 6)}-${key.substring(6, 10)}`;
-                } else if (key.length === 8) {
-                    key = `CC-${key.substring(0, 4)}-${key.substring(4, 8)}`;
-                }
-            }
+            if (checkError) throw checkError;
 
-            if (!regex.test(key)) {
-                alert("Mã đồng bộ không hợp lệ! Vui lòng nhập đúng định dạng CC-XXXX-XXXX");
+            if (existingUser) {
+                alert("Tên đăng nhập đã tồn tại! Vui lòng chọn tên khác.");
                 return;
             }
 
-            if (confirm(`Bạn có chắc chắn muốn đồng bộ với thiết bị này? Lịch sử dự án hiện tại sẽ được chuyển đổi sang mã đồng bộ mới.`)) {
-                syncKey = key;
-                localStorage.setItem('carousel_sync_key', syncKey);
-                if (pcSyncKeyVal) pcSyncKeyVal.textContent = syncKey;
-                if (mobileSyncKeyVal) mobileSyncKeyVal.textContent = syncKey;
-                input.value = '';
-                
-                alert("Liên kết thiết bị thành công! Đang tải lịch sử...");
-                loadHistoryFromDB();
+            // Băm mật khẩu và lưu
+            const hashedPassword = await hashPassword(password);
+            const { error: insertError } = await supabase
+                .from('carousel_users')
+                .insert([{ username, password: hashedPassword }]);
+
+            if (insertError) throw insertError;
+
+            alert("Đăng ký tài khoản thành công! Tự động đăng nhập...");
+            syncKey = username;
+            localStorage.setItem('carousel_logged_user', syncKey);
+            updateAuthUI();
+            loadHistoryFromDB();
+        } catch (err) {
+            console.error("Lỗi đăng ký:", err);
+            alert("Đăng ký tài khoản thất bại! Vui lòng kiểm tra kết nối mạng.");
+        }
+    }
+
+    // Xử lý logic Đăng nhập tài khoản
+    async function performLogin(usernameInputId, passwordInputId) {
+        if (!supabase) return;
+        const userIn = document.getElementById(usernameInputId);
+        const passIn = document.getElementById(passwordInputId);
+        if (!userIn || !passIn) return;
+
+        const username = userIn.value.trim().toLowerCase();
+        const password = passIn.value;
+
+        if (!username || !password) {
+            alert("Vui lòng điền đầy đủ tên đăng nhập và mật khẩu!");
+            return;
+        }
+
+        try {
+            const hashedPassword = await hashPassword(password);
+            
+            const { data: user, error: loginError } = await supabase
+                .from('carousel_users')
+                .select('*')
+                .eq('username', username)
+                .eq('password', hashedPassword)
+                .maybeSingle();
+
+            if (loginError) throw loginError;
+
+            if (!user) {
+                alert("Tên đăng nhập hoặc mật khẩu không chính xác!");
+                return;
             }
-        });
+
+            syncKey = username;
+            localStorage.setItem('carousel_logged_user', syncKey);
+            updateAuthUI();
+            loadHistoryFromDB();
+            alert(`Chào mừng quay trở lại, ${syncKey}!`);
+        } catch (err) {
+            console.error("Lỗi đăng nhập:", err);
+            alert("Đăng nhập thất bại! Vui lòng kiểm tra kết nối mạng.");
+        }
+    }
+
+    // Xử lý Đăng xuất
+    function performLogout() {
+        if (confirm("Bạn có chắc chắn muốn đăng xuất tài khoản?")) {
+            syncKey = '';
+            localStorage.removeItem('carousel_logged_user');
+            updateAuthUI();
+            loadHistoryFromDB();
+        }
+    }
+
+    // Đăng ký các sự kiện nút Auth trên PC
+    const btnPcLogin = document.getElementById('btn-pc-login');
+    const btnPcRegister = document.getElementById('btn-pc-register');
+    const btnPcLogout = document.getElementById('btn-pc-logout');
+
+    if (btnPcLogin) btnPcLogin.addEventListener('click', () => performLogin('pc-username-input', 'pc-password-input'));
+    if (btnPcRegister) btnPcRegister.addEventListener('click', () => performRegister('pc-username-input', 'pc-password-input'));
+    if (btnPcLogout) btnPcLogout.addEventListener('click', performLogout);
+
+    // Thêm sự kiện Enter trên input PC
+    const pcUserIn = document.getElementById('pc-username-input');
+    const pcPassIn = document.getElementById('pc-password-input');
+    const triggerPcLoginOnEnter = (e) => {
+        if (e.key === 'Enter') performLogin('pc-username-input', 'pc-password-input');
     };
-    connectDevice('pc-sync-connect-input', 'btn-pc-sync-connect');
-    connectDevice('mobile-sync-connect-input', 'btn-mobile-sync-connect');
+    if (pcUserIn) pcUserIn.addEventListener('keydown', triggerPcLoginOnEnter);
+    if (pcPassIn) pcPassIn.addEventListener('keydown', triggerPcLoginOnEnter);
+
+    // Đăng ký các sự kiện nút Auth trên Mobile
+    const btnMobileLogin = document.getElementById('btn-mobile-login');
+    const btnMobileRegister = document.getElementById('btn-mobile-register');
+    const btnMobileLogout = document.getElementById('btn-mobile-logout');
+
+    if (btnMobileLogin) btnMobileLogin.addEventListener('click', () => performLogin('mobile-username-input', 'mobile-password-input'));
+    if (btnMobileRegister) btnMobileRegister.addEventListener('click', () => performRegister('mobile-username-input', 'mobile-password-input'));
+    if (btnMobileLogout) btnMobileLogout.addEventListener('click', performLogout);
+
+    // Thêm sự kiện Enter trên input Mobile
+    const mobUserIn = document.getElementById('mobile-username-input');
+    const mobPassIn = document.getElementById('mobile-password-input');
+    const triggerMobileLoginOnEnter = (e) => {
+        if (e.key === 'Enter') performLogin('mobile-username-input', 'mobile-password-input');
+    };
+    if (mobUserIn) mobUserIn.addEventListener('keydown', triggerMobileLoginOnEnter);
+    if (mobPassIn) mobPassIn.addEventListener('keydown', triggerMobileLoginOnEnter);
+
+    // Khởi tạo Auth UI ban đầu
+    updateAuthUI();
 
     async function saveProjectToDB() {
         if (!supabase || !currentOriginalFile) return;
+        if (!syncKey) {
+            console.log("Chưa đăng nhập tài khoản. Dự án sẽ không được lưu trực tuyến.");
+            return;
+        }
 
         console.log("Đang tải ảnh gốc lên Supabase Storage...");
         
@@ -3540,7 +3632,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function cleanOldProjects() {
-        if (!supabase) return;
+        if (!supabase || !syncKey) return;
         try {
             const { data, error } = await supabase
                 .from('projects')
@@ -3589,6 +3681,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const pcList = document.getElementById('pc-history-list');
         const mobileList = document.getElementById('history-list');
+
+        if (!syncKey) {
+            const emptyMsg = '<div class="history-empty">Đăng nhập tài khoản để xem và đồng bộ lịch sử dự án.</div>';
+            if (pcList) pcList.innerHTML = emptyMsg;
+            if (mobileList) mobileList.innerHTML = emptyMsg;
+            return;
+        }
 
         try {
             const { data: projects, error } = await supabase
@@ -3864,6 +3963,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const handleImportFile = (file) => {
         if (!file || !supabase) return;
+        if (!syncKey) {
+            alert("Vui lòng đăng nhập tài khoản trước khi nhập file dự án đám mây!");
+            return;
+        }
 
         const reader = new FileReader();
         reader.onload = async (ev) => {

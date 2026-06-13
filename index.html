@@ -93,21 +93,27 @@
 
                     <!-- Project History Section (Mobile Only in Sidebar) -->
                     <div class="history-section" id="history-section">
-                        <!-- Sync settings panel for mobile -->
-                        <div class="sync-settings-section mobile-sync-settings">
-                            <div class="sync-key-display">
-                                <span class="sync-label">Mã đồng bộ:</span>
-                                <div class="sync-key-badge-container">
-                                    <span class="sync-key-badge" id="mobile-sync-key-val">CC-XXXX-XXXX</span>
-                                    <button type="button" class="btn-copy-sync-key" id="btn-copy-mobile-sync-key" title="Sao chép mã đồng bộ">
-                                        <i class="fa-solid fa-copy"></i>
-                                    </button>
+                        <!-- Account Section for Mobile -->
+                        <div class="auth-section mobile-auth-section" id="mobile-auth-section">
+                            <!-- Logged out view -->
+                            <div class="auth-logged-out" id="mobile-auth-logged-out">
+                                <div class="auth-input-group">
+                                    <input type="text" id="mobile-username-input" placeholder="Tên đăng nhập..." maxlength="30">
+                                    <input type="password" id="mobile-password-input" placeholder="Mật khẩu...">
+                                </div>
+                                <div class="auth-actions">
+                                    <button type="button" class="btn btn-primary btn-auth-action" id="btn-mobile-login">Đăng nhập</button>
+                                    <button type="button" class="btn btn-secondary btn-auth-action" id="btn-mobile-register">Đăng ký</button>
                                 </div>
                             </div>
-                            <div class="sync-connect-form">
-                                <input type="text" id="mobile-sync-connect-input" placeholder="Nhập mã thiết bị..." maxlength="12">
-                                <button type="button" class="btn btn-primary btn-sync-connect" id="btn-mobile-sync-connect" title="Liên kết đồng bộ">
-                                    <i class="fa-solid fa-link"></i>
+                            <!-- Logged in view -->
+                            <div class="auth-logged-in" id="mobile-auth-logged-in" style="display: none;">
+                                <div class="auth-user-info">
+                                    <i class="fa-solid fa-circle-user"></i>
+                                    <span class="auth-username" id="mobile-auth-username">username</span>
+                                </div>
+                                <button type="button" class="btn btn-danger btn-auth-logout" id="btn-mobile-logout" title="Đăng xuất">
+                                    <i class="fa-solid fa-right-from-bracket"></i>
                                 </button>
                             </div>
                         </div>
@@ -463,21 +469,27 @@
                 <button class="btn-close-history" id="btn-close-history">&times;</button>
             </div>
             <div class="history-popup-content">
-                <!-- Sync settings panel inside popup -->
-                <div class="sync-settings-section">
-                    <div class="sync-key-display">
-                        <span class="sync-label">Mã đồng bộ của bạn:</span>
-                        <div class="sync-key-badge-container">
-                            <span class="sync-key-badge" id="pc-sync-key-val">CC-XXXX-XXXX</span>
-                            <button type="button" class="btn-copy-sync-key" id="btn-copy-sync-key" title="Sao chép mã đồng bộ">
-                                <i class="fa-solid fa-copy"></i>
-                            </button>
+                <!-- Account Section for PC -->
+                <div class="auth-section" id="pc-auth-section">
+                    <!-- Logged out view -->
+                    <div class="auth-logged-out" id="pc-auth-logged-out">
+                        <div class="auth-inputs-container">
+                            <input type="text" id="pc-username-input" placeholder="Tên đăng nhập" maxlength="30">
+                            <input type="password" id="pc-password-input" placeholder="Mật khẩu">
+                        </div>
+                        <div class="auth-buttons-container">
+                            <button type="button" class="btn btn-primary btn-auth-action" id="btn-pc-login">Đăng nhập</button>
+                            <button type="button" class="btn btn-secondary btn-auth-action" id="btn-pc-register">Đăng ký</button>
                         </div>
                     </div>
-                    <div class="sync-connect-form">
-                        <input type="text" id="pc-sync-connect-input" placeholder="Nhập mã thiết bị khác..." maxlength="12">
-                        <button type="button" class="btn btn-primary btn-sync-connect" id="btn-pc-sync-connect" title="Liên kết đồng bộ">
-                            <i class="fa-solid fa-link"></i> Đồng bộ
+                    <!-- Logged in view -->
+                    <div class="auth-logged-in" id="pc-auth-logged-in" style="display: none;">
+                        <div class="auth-user-info">
+                            <i class="fa-solid fa-circle-user"></i>
+                            <span class="auth-username" id="pc-auth-username">username</span>
+                        </div>
+                        <button type="button" class="btn btn-danger btn-auth-logout" id="btn-pc-logout">
+                            <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
                         </button>
                     </div>
                 </div>

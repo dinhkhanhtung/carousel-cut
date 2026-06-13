@@ -2833,8 +2833,8 @@ input[type="number"] {
     display: none;
 }
 
-/* --- Supabase Sync Settings --- */
-.sync-settings-section {
+/* --- Supabase Account Auth Styles --- */
+.auth-section {
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -2842,68 +2842,26 @@ input[type="number"] {
     border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: var(--border-radius-sm);
     padding: 10px;
-    margin-bottom: 4px;
+    margin-bottom: 8px;
 }
 
-.sync-key-display {
+.auth-logged-out {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
     gap: 8px;
 }
 
-.sync-label {
-    font-size: 0.72rem;
-    color: var(--text-secondary);
-}
-
-.sync-key-badge-container {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.sync-key-badge {
-    font-family: monospace;
-    font-size: 0.78rem;
-    font-weight: bold;
-    color: var(--accent);
-    background: rgba(6, 182, 212, 0.1);
-    border: 1px solid rgba(6, 182, 212, 0.2);
-    padding: 2px 6px;
-    border-radius: 4px;
-    user-select: all;
-    letter-spacing: 0.5px;
-}
-
-.btn-copy-sync-key {
-    background: transparent;
-    border: none;
-    color: var(--text-secondary);
-    font-size: 0.75rem;
-    cursor: pointer;
-    width: 22px;
-    height: 22px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 4px;
-    transition: var(--transition-smooth);
-}
-
-.btn-copy-sync-key:hover {
-    color: #fff;
-    background: rgba(255, 255, 255, 0.08);
-}
-
-.sync-connect-form {
+.auth-inputs-container,
+.auth-input-group {
     display: flex;
     gap: 6px;
     width: 100%;
 }
 
-.sync-connect-form input {
+.auth-inputs-container input,
+.auth-input-group input {
     flex-grow: 1;
+    width: 50%;
     height: 32px;
     background: rgba(0, 0, 0, 0.3);
     border: 1px solid var(--border-color);
@@ -2911,25 +2869,88 @@ input[type="number"] {
     color: #fff;
     padding: 0 10px;
     font-size: 0.75rem;
-    font-family: monospace;
     outline: none;
     transition: var(--transition-smooth);
     box-sizing: border-box;
 }
 
-.sync-connect-form input:focus {
+.auth-inputs-container input:focus,
+.auth-input-group input:focus {
     border-color: var(--accent);
+    box-shadow: 0 0 8px rgba(6, 182, 212, 0.2);
 }
 
-.btn-sync-connect {
+.auth-buttons-container,
+.auth-actions {
+    display: flex;
+    gap: 6px;
+    width: 100%;
+}
+
+.btn-auth-action {
+    flex-grow: 1;
     height: 32px;
     padding: 0 12px;
     font-size: 0.72rem;
     font-weight: bold;
     display: flex;
     align-items: center;
+    justify-content: center;
+    margin: 0;
+}
+
+.auth-logged-in {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.auth-user-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-primary);
+    font-size: 0.78rem;
+    font-weight: 500;
+}
+
+.auth-user-info i {
+    color: var(--accent);
+    font-size: 0.9rem;
+}
+
+.auth-username {
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.btn-auth-logout {
+    height: 28px;
+    padding: 0 10px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
     gap: 4px;
     margin: 0;
+}
+
+/* Mobile specific styling for auth */
+@media (max-width: 768px) {
+    .mobile-auth-section {
+        margin: 6px 12px 10px 12px;
+        padding: 10px;
+    }
+    .auth-input-group {
+        flex-direction: column;
+        gap: 6px;
+    }
+    .auth-input-group input {
+        width: 100%;
+    }
 }
 
 .history-divider {
