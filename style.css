@@ -3167,6 +3167,12 @@ input[type="number"] {
     color: var(--accent);
 }
 
+.history-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
 .btn-history-action {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid var(--border-color);
