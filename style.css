@@ -2719,6 +2719,12 @@ input[type="number"] {
         padding: 4px !important;
     }
 
+    .mobile-nav-item.disabled {
+        opacity: 0.35;
+        pointer-events: none;
+        cursor: not-allowed;
+    }
+
     .mobile-nav-item span {
         white-space: nowrap !important;
         overflow: hidden !important;

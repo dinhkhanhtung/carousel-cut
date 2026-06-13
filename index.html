@@ -31,13 +31,13 @@
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Styling -->
-    <link rel="stylesheet" href="style.css?v=2.6.0">
+    <link rel="stylesheet" href="style.css?v=2.7.0">
     <!-- JSZip Library (CDN) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
     <!-- Supabase Client Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- App Logic -->
-    <script src="app.js?v=2.6.0" defer></script>
+    <script src="app.js?v=2.7.0" defer></script>
 </head>
 <body>
     <div class="app-container mobile-tab-upload">
@@ -365,11 +365,11 @@
                 <i class="fa-solid fa-cloud-arrow-up"></i>
                 <span>Tải ảnh</span>
             </button>
-            <button class="mobile-nav-item" data-tab="edit" id="mobile-nav-edit" style="display: none;">
+            <button class="mobile-nav-item disabled" data-tab="edit" id="mobile-nav-edit">
                 <i class="fa-solid fa-crop-simple"></i>
                 <span>Cắt ảnh</span>
             </button>
-            <button class="mobile-nav-item" data-tab="result" id="mobile-nav-result" style="display: none;">
+            <button class="mobile-nav-item disabled" data-tab="result" id="mobile-nav-result">
                 <i class="fa-solid fa-images"></i>
                 <span>Thư viện</span>
             </button>

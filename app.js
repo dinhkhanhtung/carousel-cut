@@ -403,6 +403,7 @@ document.addEventListener('DOMContentLoaded', () => {
     [mobileNavUpload, mobileNavEdit, mobileNavResult].forEach(btn => {
         if (btn) {
             btn.addEventListener('click', () => {
+                if (btn.classList.contains('disabled')) return;
                 const tabId = btn.getAttribute('data-tab');
                 switchMobileTab(tabId);
             });
@@ -1612,8 +1613,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     handleParamsChange();
                     setSlicingMode(slicingMode);
                     // Hiển thị tab cắt ảnh và tự động chuyển sang tab cắt ảnh trên mobile
-                    if (mobileNavEdit) mobileNavEdit.style.display = 'flex';
-                    if (mobileNavResult) mobileNavResult.style.display = 'none';
+                    if (mobileNavEdit) mobileNavEdit.classList.remove('disabled');
+                    if (mobileNavResult) mobileNavResult.classList.add('disabled');
                     switchMobileTab('edit');
                 }, 50);
             };
@@ -2515,7 +2516,7 @@ document.addEventListener('DOMContentLoaded', () => {
         switchTab('tab-result-grid');
         
         // Hiển thị tab kết quả (Thư viện) trên mobile và tự động chuyển sang tab kết quả
-        if (mobileNavResult) mobileNavResult.style.display = 'flex';
+        if (mobileNavResult) mobileNavResult.classList.remove('disabled');
         switchMobileTab('result');
 
         // Tự động lưu dự án vào lịch sử IndexedDB
@@ -3320,8 +3321,8 @@ document.addEventListener('DOMContentLoaded', () => {
         setSlicingMode('grid');
         
         // Reset tab trên di động về mặc định
-        if (mobileNavEdit) mobileNavEdit.style.display = 'none';
-        if (mobileNavResult) mobileNavResult.style.display = 'none';
+        if (mobileNavEdit) mobileNavEdit.classList.add('disabled');
+        if (mobileNavResult) mobileNavResult.classList.add('disabled');
         switchMobileTab('upload');
     }
 
@@ -4032,6 +4033,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     drawLiveGrid();
                     alert(`Đã nạp lại dự án "${proj.name}" thành công!`);
 
+                    if (mobileNavEdit) mobileNavEdit.classList.remove('disabled');
+                    if (mobileNavResult) mobileNavResult.classList.add('disabled');
                     switchTab('tab-live-grid');
                     switchMobileTab('edit');
                 };
