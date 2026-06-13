@@ -1392,8 +1392,8 @@ input[type="number"] {
 
 /* Smartphone Mockup */
 .smartphone-shell {
-    width: 320px;
-    height: 640px;
+    width: 340px;
+    height: 680px;
     border-radius: 40px;
     border: 10px solid #27272a;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6),
@@ -2464,9 +2464,13 @@ input[type="number"] {
     }
 
     /* Smartphone Preview Modal */
+    .mobile-preview-container {
+        padding-bottom: 40px !important; /* Đẩy nút Close bám sát đáy điện thoại hơn */
+    }
+
     .smartphone-shell {
-        width: 250px !important;
-        height: 480px !important;
+        width: 290px !important;
+        height: 580px !important;
         border-width: 6px !important;
         border-radius: 28px !important;
         flex-shrink: 0 !important;
