@@ -58,10 +58,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnToggleSidebar = document.getElementById('btn-toggle-sidebar');
     const appContent = document.getElementById('app-content');
 
+    // History & Lock Elements
+    const historyList = document.getElementById('history-list');
+    const passwordGate = document.getElementById('password-gate');
+    const btnUnlockApp = document.getElementById('btn-unlock-app');
+    const appPasswordInput = document.getElementById('app-password-input');
+    const passwordErrorMessage = document.getElementById('password-error-message');
+    const btnTogglePasswordVisibility = document.getElementById('btn-toggle-password-visibility');
+
     const ctx = previewCanvas.getContext('2d');
 
     // Global State
     let currentImage = null;
+    let currentOriginalFile = null;
     let slicedImages = []; // Array of { name, dataUrl }
     let slicedBlobs = [];  // Array of { name, blob }
     
@@ -1377,6 +1386,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Global Key Shortcuts Listener
     window.addEventListener('keydown', (e) => {
+        // Chặn toàn bộ phím tắt nếu ứng dụng đang ở trạng thái khóa
+        if (localStorage.getItem('app_unlocked') !== 'true') {
+            return;
+        }
+
         // Xử lý phím tắt cho Modal xem thử điện thoại (Mobile Preview)
         if (mobilePreviewModal && mobilePreviewModal.style.display === 'flex') {
             if (e.key === 'Escape') {
@@ -1538,6 +1552,7 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Vui lòng chọn file hình ảnh hợp lệ (PNG, JPG, JPEG, WEBP,...)');
             return;
         }
+        currentOriginalFile = file;
 
         // Xóa sạch kết quả cũ khi tải ảnh mới lên để tránh trộn lẫn và lệch kích thước
         slicedImages = [];
@@ -2502,6 +2517,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Hiển thị tab kết quả (Thư viện) trên mobile và tự động chuyển sang tab kết quả
         if (mobileNavResult) mobileNavResult.style.display = 'flex';
         switchMobileTab('result');
+
+        // Tự động lưu dự án vào lịch sử IndexedDB
+        saveProjectToDB();
     });
 
     function processSlice(sx, sy, cropW, cropH, sliceName, resultId, targetW, targetH) {
@@ -3334,4 +3352,495 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
+
+    // --- IndexedDB Management ---
+    const DB_NAME = 'CarouselCutDB';
+    const DB_VERSION = 1;
+    const STORE_NAME = 'projects';
+    let db = null;
+
+    function initDB() {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open(DB_NAME, DB_VERSION);
+            request.onerror = (e) => {
+                console.error("IndexedDB error:", e);
+                reject(e);
+            };
+            request.onsuccess = (e) => {
+                db = e.target.result;
+                resolve(db);
+                loadHistoryFromDB();
+            };
+            request.onupgradeneeded = (e) => {
+                const database = e.target.result;
+                if (!database.objectStoreNames.contains(STORE_NAME)) {
+                    database.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+                }
+            };
+        });
+    }
+
+    function saveProjectToDB() {
+        if (!db || !currentOriginalFile) return;
+
+        const transaction = db.transaction([STORE_NAME], 'readwrite');
+        const store = transaction.objectStore(STORE_NAME);
+        
+        // Lấy tất cả dự án hiện tại để giới hạn tối đa 10 dự án
+        const getAllRequest = store.getAll();
+        getAllRequest.onsuccess = (e) => {
+            const projects = e.target.result;
+            projects.sort((a, b) => a.id - b.id); // Sắp xếp cũ nhất ở đầu
+            
+            if (projects.length >= 10) {
+                // Xóa bớt dự án cũ nhất
+                const oldestProject = projects[0];
+                store.delete(oldestProject.id);
+            }
+
+            // Lưu dự án mới
+            const newProject = {
+                name: currentOriginalFile.name || 'du_an_khong_ten.png',
+                date: new Date().toLocaleString('vi-VN'),
+                imageBlob: currentOriginalFile,
+                slicingMode: slicingMode,
+                gridType: gridType,
+                rows: parseInt(inputRows.value) || 1,
+                cols: parseInt(inputCols.value) || 1,
+                ratio: selectRatio.value,
+                scale: selectExportScale.value,
+                offset: parseInt(inputOffset.value) || 0,
+                selectionBoxes: JSON.parse(JSON.stringify(selectionBoxes)),
+                switchUniform: switchUniform.checked,
+                switchSnap: switchSnap ? switchSnap.checked : true,
+                colsX: JSON.parse(JSON.stringify(colsX)),
+                rowsY: JSON.parse(JSON.stringify(rowsY))
+            };
+
+            const addRequest = store.add(newProject);
+            addRequest.onsuccess = () => {
+                console.log("Tự động lưu lịch sử dự án thành công!");
+                loadHistoryFromDB();
+            };
+        };
+    }
+
+    function loadHistoryFromDB() {
+        if (!db || !historyList) return;
+
+        const transaction = db.transaction([STORE_NAME], 'readonly');
+        const store = transaction.objectStore(STORE_NAME);
+        const request = store.getAll();
+
+        request.onsuccess = (e) => {
+            const projects = e.target.result;
+            
+            if (projects.length === 0) {
+                historyList.innerHTML = '<div class="history-empty">Chưa có dự án nào được lưu cục bộ.</div>';
+                return;
+            }
+
+            // Sắp xếp dự án mới nhất lên đầu
+            projects.sort((a, b) => b.id - a.id);
+
+            historyList.innerHTML = '';
+            projects.forEach((proj) => {
+                const item = document.createElement('div');
+                item.classList.add('history-item');
+                item.dataset.id = proj.id;
+
+                // Tạo URL tạm thời cho thumbnail ảnh gốc
+                const thumbUrl = URL.createObjectURL(proj.imageBlob);
+
+                item.innerHTML = `
+                    <img class="history-thumb" src="${thumbUrl}" alt="Thumbnail">
+                    <div class="history-info">
+                        <div class="history-name" title="${proj.name}">${proj.name}</div>
+                        <div class="history-date">${proj.date}</div>
+                    </div>
+                    <div class="history-actions">
+                        <button class="history-btn history-btn-load" title="Nạp lại dự án này">
+                            <i class="fa-solid fa-folder-open"></i>
+                        </button>
+                        <button class="history-btn history-btn-export" title="Xuất dự án thành file (.ccut)">
+                            <i class="fa-solid fa-file-export"></i>
+                        </button>
+                        <button class="history-btn history-btn-del" title="Xóa dự án này">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                `;
+
+                // Nạp dự án
+                item.querySelector('.history-btn-load').addEventListener('click', (ev) => {
+                    ev.stopPropagation();
+                    loadProject(proj.id);
+                });
+
+                // Xuất dự án ra file
+                item.querySelector('.history-btn-export').addEventListener('click', (ev) => {
+                    ev.stopPropagation();
+                    exportProject(proj.id);
+                });
+
+                // Xóa dự án khỏi lịch sử
+                item.querySelector('.history-btn-del').addEventListener('click', (ev) => {
+                    ev.stopPropagation();
+                    if (confirm(`Bạn có chắc chắn muốn xóa dự án "${proj.name}" khỏi lịch sử?`)) {
+                        deleteProject(proj.id);
+                    }
+                });
+
+                historyList.appendChild(item);
+            });
+        };
+    }
+
+    function loadProject(id) {
+        if (!db) return;
+
+        const transaction = db.transaction([STORE_NAME], 'readonly');
+        const store = transaction.objectStore(STORE_NAME);
+        const request = store.get(id);
+
+        request.onsuccess = (e) => {
+            const proj = e.target.result;
+            if (!proj) return;
+
+            // Khôi phục file ảnh gốc
+            currentOriginalFile = proj.imageBlob;
+
+            // Thiết lập các thông số giao diện
+            slicingMode = proj.slicingMode;
+            gridType = proj.gridType;
+            
+            // Cập nhật Mode Switcher UI
+            if (slicingMode === 'grid') {
+                if (modeGridBtn) modeGridBtn.classList.add('active');
+                if (modeBoxBtn) modeBoxBtn.classList.remove('active');
+                if (controlsGridMode) controlsGridMode.classList.add('active');
+                if (controlsBoxMode) controlsBoxMode.classList.remove('active');
+            } else {
+                if (modeGridBtn) modeGridBtn.classList.remove('active');
+                if (modeBoxBtn) modeBoxBtn.classList.add('active');
+                if (controlsGridMode) controlsGridMode.classList.remove('active');
+                if (controlsBoxMode) controlsBoxMode.classList.add('active');
+            }
+
+            // Phục hồi giá trị các ô nhập liệu
+            if (selectGridType) selectGridType.value = gridType;
+            if (inputRows) inputRows.value = proj.rows;
+            if (inputCols) inputCols.value = proj.cols;
+            if (selectRatio) selectRatio.value = proj.ratio;
+            if (selectExportScale) selectExportScale.value = proj.scale;
+            if (inputOffset) {
+                inputOffset.value = proj.offset;
+                if (offsetNumberVal) offsetNumberVal.value = proj.offset;
+            }
+            if (switchUniform) {
+                switchUniform.checked = proj.switchUniform;
+                isUniformSize = proj.switchUniform;
+            }
+            if (switchSnap) {
+                switchSnap.checked = proj.switchSnap;
+                isSnapEnabled = proj.switchSnap;
+            }
+
+            // Phục hồi lưới / khung vẽ tự do
+            colsX = proj.colsX || [];
+            rowsY = proj.rowsY || [];
+            selectionBoxes = proj.selectionBoxes || [];
+            if (selectionBoxes.length > 0) {
+                nextBoxId = Math.max(...selectionBoxes.map(b => b.id)) + 1;
+            } else {
+                nextBoxId = 1;
+            }
+
+            // Bật tắt hiển thị tham số lưới đều
+            if (gridEvenParameters) {
+                gridEvenParameters.style.display = (gridType === 'even') ? 'flex' : 'none';
+            }
+
+            // Nạp ảnh gốc lên giao diện
+            fileName.textContent = proj.name;
+            fileSize.textContent = proj.imageBlob.size ? `(${(proj.imageBlob.size / 1024).toFixed(1)} KB)` : '';
+            dropzonePrompt.style.display = 'none';
+            fileInfo.style.display = 'flex';
+            dropzone.classList.add('has-image');
+            appContent.classList.add('has-image');
+
+            // Xóa kết quả cũ
+            slicedImages = [];
+            slicedBlobs = [];
+            resultGrid.innerHTML = '';
+            resultGrid.className = 'result-grid';
+            resultCount.textContent = '0';
+            if (resultCountBadge) resultCountBadge.textContent = '0';
+            tabBtnResult.disabled = true;
+
+            if (btnDownloadZip) btnDownloadZip.style.display = 'none';
+            if (btnClearResults) btnClearResults.style.display = 'none';
+            if (btnRenumberResults) btnRenumberResults.style.display = 'none';
+            if (btnMobilePreview) btnMobilePreview.style.display = 'none';
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    currentImage = img;
+                    
+                    // Reset zoom & pan
+                    zoomScale = 1.0;
+                    panX = 0;
+                    panY = 0;
+                    selectedBoxIdx = -1;
+                    
+                    canvasPlaceholder.style.display = 'none';
+                    previewCanvas.style.display = 'block';
+                    imageMeta.style.display = 'flex';
+                    interactiveTip.style.display = 'flex';
+                    imgDimOriginal.textContent = `${img.naturalWidth}×${img.naturalHeight}`;
+                    
+                    btnSlice.disabled = false;
+                    if (btnAutoDetect) btnAutoDetect.disabled = false;
+                    btnGenBoxes.disabled = (slicingMode !== 'box');
+                    btnClearBoxes.disabled = (slicingMode !== 'box');
+
+                    if (colsX.length === 0 && rowsY.length === 0 && slicingMode === 'grid' && gridType === 'even') {
+                        resetGridToEven();
+                    }
+
+                    drawLiveGrid();
+                    alert(`Đã nạp lại dự án "${proj.name}" thành công!`);
+
+                    // Chuyển tab xem lưới cắt
+                    switchTab('tab-live-grid');
+                    switchMobileTab('edit');
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(proj.imageBlob);
+        };
+    }
+
+    function deleteProject(id) {
+        if (!db) return;
+
+        const transaction = db.transaction([STORE_NAME], 'readwrite');
+        const store = transaction.objectStore(STORE_NAME);
+        const request = store.delete(id);
+
+        request.onsuccess = () => {
+            console.log("Đã xóa dự án khỏi IndexedDB.");
+            loadHistoryFromDB();
+        };
+    }
+
+    function exportProject(id) {
+        if (!db) return;
+
+        const transaction = db.transaction([STORE_NAME], 'readonly');
+        const store = transaction.objectStore(STORE_NAME);
+        const request = store.get(id);
+
+        request.onsuccess = (e) => {
+            const proj = e.target.result;
+            if (!proj) return;
+
+            // Chuyển đổi imageBlob thành base64
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const base64Data = ev.target.result;
+                
+                const exportData = {
+                    version: "1.0",
+                    name: proj.name,
+                    slicingMode: proj.slicingMode,
+                    gridType: proj.gridType,
+                    rows: proj.rows,
+                    cols: proj.cols,
+                    ratio: proj.ratio,
+                    scale: proj.scale,
+                    offset: proj.offset,
+                    selectionBoxes: proj.selectionBoxes,
+                    switchUniform: proj.switchUniform,
+                    switchSnap: proj.switchSnap,
+                    colsX: proj.colsX,
+                    rowsY: proj.rowsY,
+                    imageBase64: base64Data
+                };
+
+                const jsonStr = JSON.stringify(exportData, null, 2);
+                const blob = new Blob([jsonStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                const baseName = proj.name.substring(0, proj.name.lastIndexOf('.')) || proj.name;
+                a.download = `${baseName}_carousel_cut.ccut`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            };
+            reader.readAsDataURL(proj.imageBlob);
+        };
+    }
+
+    // Logic Nhập dự án từ file .ccut
+    const btnImportProject = document.getElementById('btn-import-project');
+    const importProjectInput = document.getElementById('import-project-input');
+
+    if (btnImportProject && importProjectInput) {
+        btnImportProject.addEventListener('click', () => {
+            importProjectInput.click();
+        });
+
+        importProjectInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                try {
+                    const data = JSON.parse(ev.target.result);
+                    
+                    // Validate cấu trúc file ccut
+                    if (!data.imageBase64 || !data.slicingMode || !data.name) {
+                        alert("File dự án không hợp lệ. Vui lòng chọn đúng file .ccut của Carousel Cut!");
+                        return;
+                    }
+
+                    // Chuyển đổi base64 trở lại thành Blob
+                    const fetchBlobFromBase64 = async (base64) => {
+                        const res = await fetch(base64);
+                        return await res.blob();
+                    };
+
+                    fetchBlobFromBase64(data.imageBase64).then((imageBlob) => {
+                        if (!db) {
+                            alert("Database chưa được khởi tạo!");
+                            return;
+                        }
+
+                        const transaction = db.transaction([STORE_NAME], 'readwrite');
+                        const store = transaction.objectStore(STORE_NAME);
+
+                        // Giới hạn số lượng dự án tối đa là 10
+                        const getAllRequest = store.getAll();
+                        getAllRequest.onsuccess = (event) => {
+                            const projects = event.target.result;
+                            projects.sort((a, b) => a.id - b.id);
+                            
+                            if (projects.length >= 10) {
+                                const oldestProject = projects[0];
+                                store.delete(oldestProject.id);
+                            }
+
+                            const newProject = {
+                                name: data.name,
+                                date: new Date().toLocaleString('vi-VN') + " (Nhập file)",
+                                imageBlob: imageBlob,
+                                slicingMode: data.slicingMode,
+                                gridType: data.gridType || 'even',
+                                rows: parseInt(data.rows) || 1,
+                                cols: parseInt(data.cols) || 1,
+                                ratio: data.ratio || 'free',
+                                scale: data.scale || '3',
+                                offset: parseInt(data.offset) || 0,
+                                selectionBoxes: data.selectionBoxes || [],
+                                switchUniform: data.switchUniform !== undefined ? data.switchUniform : false,
+                                switchSnap: data.switchSnap !== undefined ? data.switchSnap : true,
+                                colsX: data.colsX || [],
+                                rowsY: data.rowsY || []
+                            };
+
+                            const addRequest = store.add(newProject);
+                            addRequest.onsuccess = (addEvent) => {
+                                const newId = addEvent.target.result;
+                                console.log("Nhập dự án thành công!");
+                                loadHistoryFromDB();
+                                
+                                // Tự động load dự án vừa nhập
+                                loadProject(newId);
+                            };
+                        };
+                    }).catch(err => {
+                        console.error(err);
+                        alert("Lỗi khi chuyển đổi dữ liệu ảnh. Vui lòng thử lại!");
+                    });
+
+                } catch (err) {
+                    console.error(err);
+                    alert("Không thể đọc file. File có thể bị hỏng!");
+                }
+                
+                // Reset input file để có thể chọn lại cùng file
+                importProjectInput.value = '';
+            };
+            reader.readAsText(file);
+        });
+    }
+
+    // --- Password Gate Security ---
+    const CORRECT_PASSWORD = 'carousel2026';
+
+    function checkPasswordLock() {
+        if (!passwordGate) return;
+
+        const isUnlocked = localStorage.getItem('app_unlocked') === 'true';
+        if (isUnlocked) {
+            passwordGate.style.display = 'none';
+        } else {
+            passwordGate.style.display = 'flex';
+            if (appPasswordInput) appPasswordInput.focus();
+        }
+    }
+
+    if (btnUnlockApp && appPasswordInput) {
+        const unlock = () => {
+            const val = appPasswordInput.value;
+            if (val === CORRECT_PASSWORD) {
+                localStorage.setItem('app_unlocked', 'true');
+                passwordGate.classList.add('fade-out');
+                setTimeout(() => {
+                    passwordGate.style.display = 'none';
+                }, 400);
+            } else {
+                const box = passwordGate.querySelector('.password-box');
+                if (box) {
+                    box.classList.remove('shake');
+                    void box.offsetWidth; 
+                    box.classList.add('shake');
+                }
+                if (passwordErrorMessage) {
+                    passwordErrorMessage.style.display = 'block';
+                }
+            }
+        };
+
+        btnUnlockApp.addEventListener('click', unlock);
+        appPasswordInput.addEventListener('keydown', (ev) => {
+            if (ev.key === 'Enter') {
+                unlock();
+            }
+        });
+    }
+
+    if (btnTogglePasswordVisibility && appPasswordInput) {
+        btnTogglePasswordVisibility.addEventListener('click', () => {
+            const icon = btnTogglePasswordVisibility.querySelector('i');
+            if (appPasswordInput.type === 'password') {
+                appPasswordInput.type = 'text';
+                if (icon) icon.className = 'fa-solid fa-eye-slash';
+            } else {
+                appPasswordInput.type = 'password';
+                if (icon) icon.className = 'fa-solid fa-eye';
+            }
+        });
+    }
+
+    // --- Initialize Features ---
+    initDB();
+    checkPasswordLock();
 });

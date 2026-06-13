@@ -85,6 +85,27 @@
                             <span class="file-size" id="file-size">(0 KB)</span>
                             <button type="button" class="btn-remove-file" id="btn-remove-file" title="Xóa ảnh">
                                 <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Project History Section -->
+                    <div class="history-section" id="history-section">
+                        <div class="history-header">
+                            <div class="history-header-left">
+                                <i class="fa-solid fa-clock-rotate-left"></i>
+                                <span>Lịch sử dự án đã lưu</span>
+                            </div>
+                            <div class="history-header-actions">
+                                <button type="button" id="btn-import-project" class="btn-history-action" title="Nhập dự án từ file (.ccut)">
+                                    <i class="fa-solid fa-file-import"></i> <span>Nhập file</span>
+                                </button>
+                                <input type="file" id="import-project-input" accept=".ccut" style="display: none;">
+                            </div>
+                        </div>
+                        <div class="history-list" id="history-list">
+                            <!-- Dynamic history items will be inserted here -->
+                            <div class="history-empty">Chưa có dự án nào được lưu cục bộ.</div>
                         </div>
                     </div>
 
@@ -435,6 +456,33 @@
                 <div class="shortcut-item"><span class="key">?</span><span class="desc">Mở / Đóng bảng phím tắt này</span></div>
                 <div class="shortcut-item"><span class="key">←</span> / <span class="key">→</span> (Xem thử)<span class="desc">Chuyển slide trước/sau khi xem thử ĐT</span></div>
                 <div class="shortcut-item"><span class="key">Esc</span> (Xem thử)<span class="desc">Đóng khung xem thử điện thoại</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Password Gate Overlay -->
+    <div class="password-gate" id="password-gate">
+        <div class="password-gate-backdrop"></div>
+        <div class="password-box">
+            <div class="password-logo">
+                <i class="fa-solid fa-scissors brand-icon"></i>
+                <span class="brand-text">Carousel <span class="accent-text">Cut</span></span>
+            </div>
+            <p class="password-desc">Ứng dụng đã được khóa bảo mật. Vui lòng nhập mật khẩu mở khóa để tiếp tục sử dụng.</p>
+            
+            <div class="password-input-wrapper">
+                <input type="password" id="app-password-input" placeholder="Nhập mật khẩu mở khóa..." autocomplete="current-password">
+                <button type="button" id="btn-toggle-password-visibility" title="Hiện/Ẩn mật khẩu">
+                    <i class="fa-solid fa-eye"></i>
+                </button>
+            </div>
+            
+            <button type="button" class="btn btn-primary btn-unlock" id="btn-unlock-app">
+                <i class="fa-solid fa-key"></i> Mở khóa ứng dụng
+            </button>
+            
+            <div class="password-error-message" id="password-error-message" style="display: none;">
+                Mật khẩu không chính xác. Vui lòng thử lại!
             </div>
         </div>
     </div>
