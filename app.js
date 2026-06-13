@@ -3916,7 +3916,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <i class="fa-solid fa-file-export"></i>
                             </button>
                             <button class="history-btn history-btn-del" title="Xóa dự án này">
-                                <i class="fa-solid fa-trash-can"></i>
+                                <i class="fa-solid fa-xmark"></i>
                             </button>
                         </div>
                     `;
