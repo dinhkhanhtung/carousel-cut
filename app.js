@@ -527,7 +527,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if (currentImage) {
                 if (slicingMode === 'grid' && gridType === 'even') {
-                    resetGridToEven();
+                    if (!isCustomGrid) {
+                        resetGridToEven();
+                    } else {
+                        const height = currentImage.naturalHeight;
+                        const effectiveHeight = height * (1 - cropBottomPercent / 100);
+                        rowsY = rowsY.map((y, idx) => {
+                            const minLimit = (idx === 0) ? 0 : rowsY[idx - 1];
+                            return Math.max(minLimit + 20, Math.min(effectiveHeight - 20, y));
+                        });
+                    }
                 }
                 drawLiveGrid();
             }
@@ -548,7 +557,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if (currentImage) {
                 if (slicingMode === 'grid' && gridType === 'even') {
-                    resetGridToEven();
+                    if (!isCustomGrid) {
+                        resetGridToEven();
+                    } else {
+                        const height = currentImage.naturalHeight;
+                        const effectiveHeight = height * (1 - cropBottomPercent / 100);
+                        rowsY = rowsY.map((y, idx) => {
+                            const minLimit = (idx === 0) ? 0 : rowsY[idx - 1];
+                            return Math.max(minLimit + 20, Math.min(effectiveHeight - 20, y));
+                        });
+                    }
                 }
                 drawLiveGrid();
             }
@@ -2337,7 +2355,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (slicingMode === 'grid') {
             if (gridType === 'even') {
-                resetGridToEven(); // Đảm bảo colsX và rowsY luôn được chia đều chính xác theo giá trị mới nhất trong input
+                if (!isCustomGrid) {
+                    resetGridToEven(); // Đảm bảo colsX và rowsY luôn được chia đều chính xác theo giá trị mới nhất trong input
+                }
                 const rows = parseInt(inputRows.value) || 1;
                 const cols = parseInt(inputCols.value) || 1;
                 const boundariesX = [0, ...colsX, width];
