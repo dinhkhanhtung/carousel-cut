@@ -3514,7 +3514,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 cols: parseInt(inputCols.value) || 1,
                 ratio: selectRatio.value,
                 scale: selectExportScale.value,
-                offset: parseInt(inputOffset.value) || 0,
+                offset_val: parseInt(inputOffset.value) || 0,
                 selection_boxes: selectionBoxes,
                 switch_uniform: switchUniform.checked,
                 switch_snap: switchSnap ? switchSnap.checked : true,
@@ -3705,8 +3705,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (selectRatio) selectRatio.value = proj.ratio;
             if (selectExportScale) selectExportScale.value = proj.scale;
             if (inputOffset) {
-                inputOffset.value = proj.offset;
-                if (offsetNumberVal) offsetNumberVal.value = proj.offset;
+                inputOffset.value = proj.offset_val || 0;
+                if (offsetNumberVal) offsetNumberVal.value = proj.offset_val || 0;
             }
             if (switchUniform) {
                 switchUniform.checked = proj.switch_uniform;
@@ -3833,7 +3833,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     cols: proj.cols,
                     ratio: proj.ratio,
                     scale: proj.scale,
-                    offset: proj.offset,
+                    offset: proj.offset_val || 0,
                     selectionBoxes: proj.selection_boxes,
                     switchUniform: proj.switch_uniform,
                     switchSnap: proj.switch_snap,
@@ -3902,7 +3902,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     cols: parseInt(data.cols) || 1,
                     ratio: data.ratio || 'free',
                     scale: data.scale || '3',
-                    offset: parseInt(data.offset) || 0,
+                    offset_val: parseInt(data.offset) || 0,
                     selection_boxes: data.selectionBoxes || [],
                     switch_uniform: data.switchUniform !== undefined ? data.switchUniform : false,
                     switch_snap: data.switchSnap !== undefined ? data.switchSnap : true,
