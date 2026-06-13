@@ -37,7 +37,7 @@
     <div class="bg-glow bg-glow-1"></div>
     <div class="bg-glow bg-glow-2"></div>
 
-    <div class="app-container">
+    <div class="app-container mobile-tab-upload">
         <header class="app-header">
             <div class="logo">
                 <i class="fa-solid fa-scissors brand-icon"></i>
@@ -381,6 +381,22 @@
                 <div class="shortcut-item"><span class="key">?</span><span class="desc">Mở / Đóng bảng phím tắt này</span></div>
             </div>
         </div>
+    </div>
+
+    <!-- Mobile Bottom Navigation Bar -->
+    <div class="mobile-bottom-nav">
+        <button class="mobile-nav-item active" data-tab="upload" id="mobile-nav-upload">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <span>Tải ảnh</span>
+        </button>
+        <button class="mobile-nav-item" data-tab="edit" id="mobile-nav-edit" style="display: none;">
+            <i class="fa-solid fa-crop-simple"></i>
+            <span>Cắt ảnh</span>
+        </button>
+        <button class="mobile-nav-item" data-tab="result" id="mobile-nav-result" style="display: none;">
+            <i class="fa-solid fa-images"></i>
+            <span>Thư viện</span>
+        </button>
     </div>
 
 </body>

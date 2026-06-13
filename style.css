@@ -1544,14 +1544,15 @@ input[type="number"] {
         overflow: hidden;
     }
 
-    /* Tối ưu container chính thành 100vh không cuộn ngoài */
+    /* Tối ưu container chính thành 100vh không cuộn ngoài và chừa 66px đáy cho Bottom Nav */
     .app-container {
-        padding: 6px !important;
+        padding: 6px 6px 66px 6px !important;
         gap: 6px !important;
         height: 100vh !important;
         display: flex !important;
         flex-direction: column !important;
         overflow: hidden !important;
+        box-sizing: border-box !important;
     }
 
     .app-header {
@@ -1579,32 +1580,64 @@ input[type="number"] {
         flex-direction: column !important;
         gap: 6px !important;
         flex: 1 !important;
-        height: calc(100vh - 50px) !important;
+        height: auto !important;
         overflow: hidden !important;
     }
 
-    /* 1. KHI CHƯA CÓ ẢNH: Ẩn view-panel (chưa có canvas và kết quả) */
-    .app-content:not(.has-image) .view-panel {
+    /* Ẩn nút ghim sidebar trên mobile */
+    #btn-toggle-sidebar {
         display: none !important;
     }
-    
-    .app-content:not(.has-image) #sidebar {
-        height: 100% !important;
-        overflow-y: auto !important;
-    }
 
-    /* 2. KHI ĐÃ CÓ ẢNH: Đưa Canvas lên trên (43% vh), Bảng cấu hình xuống dưới (57% vh) và tự cuộn dọc */
-    .app-content.has-image .view-panel {
-        order: 1 !important;
-        flex: 0 0 43% !important;
-        height: 43% !important;
-        min-height: auto !important;
+    /* 1. Trạng thái Tab TẢI ẢNH (mobile-tab-upload) */
+    .app-container.mobile-tab-upload .view-panel {
+        display: none !important;
+    }
+    .app-container.mobile-tab-upload #sidebar {
+        display: flex !important;
+        flex: 1 !important;
+        height: 100% !important;
+        margin-bottom: 0 !important;
+    }
+    .app-container.mobile-tab-upload #sidebar .dropzone {
         display: flex !important;
         flex-direction: column !important;
+        flex: 1 !important;
+        height: 100% !important;
+        min-height: 200px !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    /* Ẩn các cấu hình khác trong tab upload */
+    .app-container.mobile-tab-upload #sidebar .panel-header,
+    .app-container.mobile-tab-upload #sidebar .mode-switch-container,
+    .app-container.mobile-tab-upload #sidebar .params-container,
+    .app-container.mobile-tab-upload #sidebar .control-group-grid,
+    .app-container.mobile-tab-upload #sidebar .control-item,
+    .app-container.mobile-tab-upload #sidebar .action-buttons {
+        display: none !important;
+    }
+
+    /* 2. Trạng thái Tab CẮT ẢNH (mobile-tab-edit) */
+    .app-container.mobile-tab-edit .view-panel {
+        display: flex !important;
+        flex: 1 !important;
+        height: auto !important;
+        order: 1 !important;
         overflow: hidden !important;
     }
-    
-    .app-content.has-image .view-panel .canvas-wrapper {
+    .app-container.mobile-tab-edit .view-panel #tab-live-grid {
+        display: flex !important;
+        flex-direction: column !important;
+        height: 100% !important;
+    }
+    .app-container.mobile-tab-edit .view-panel #tab-result-grid {
+        display: none !important;
+    }
+    .app-container.mobile-tab-edit .view-panel .tabs {
+        display: none !important; /* Ẩn tab header trên di động */
+    }
+    .app-container.mobile-tab-edit .view-panel .canvas-wrapper {
         flex: 1 !important;
         height: 100% !important;
         overflow: hidden !important;
@@ -1613,12 +1646,63 @@ input[type="number"] {
         justify-content: center !important;
     }
 
-    .app-content.has-image #sidebar {
+    .app-container.mobile-tab-edit #sidebar {
+        display: flex !important;
+        flex: 0 0 250px !important; /* Chiều cao cố định cho cấu hình */
+        height: 250px !important;
         order: 2 !important;
-        flex: 0 0 57% !important;
-        height: 57% !important;
+        position: relative !important;
         overflow-y: auto !important;
-        padding-bottom: 24px !important;
+        padding-bottom: 70px !important; /* Chừa chỗ cho nút Cắt ảnh ghim ở đáy */
+        box-sizing: border-box !important;
+    }
+    .app-container.mobile-tab-edit #sidebar .dropzone {
+        display: none !important;
+    }
+    .app-container.mobile-tab-edit #sidebar .action-buttons {
+        position: absolute !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        padding: 10px 12px !important;
+        background: rgba(15, 23, 42, 0.95) !important;
+        backdrop-filter: blur(8px) !important;
+        -webkit-backdrop-filter: blur(8px) !important;
+        border-top: 1px solid var(--border-color) !important;
+        z-index: 20 !important;
+        margin: 0 !important;
+        display: block !important;
+    }
+    .app-container.mobile-tab-edit #sidebar .action-buttons .btn {
+        width: 100% !important;
+        height: 44px !important;
+        font-size: 0.95rem !important;
+        font-weight: 700 !important;
+        background: var(--accent-gradient) !important;
+        box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3) !important;
+    }
+
+    /* 3. Trạng thái Tab THƯ VIỆN (mobile-tab-result) */
+    .app-container.mobile-tab-result #sidebar {
+        display: none !important;
+    }
+    .app-container.mobile-tab-result .view-panel {
+        display: flex !important;
+        flex: 1 !important;
+        height: 100% !important;
+        order: 1 !important;
+        overflow: hidden !important;
+    }
+    .app-container.mobile-tab-result .view-panel #tab-live-grid {
+        display: none !important;
+    }
+    .app-container.mobile-tab-result .view-panel #tab-result-grid {
+        display: flex !important;
+        flex-direction: column !important;
+        height: 100% !important;
+    }
+    .app-container.mobile-tab-result .view-panel .tabs {
+        display: none !important;
     }
 
     /* Tối ưu hóa panel */
@@ -2006,5 +2090,69 @@ input[type="number"] {
     /* Ẩn helper phím tắt trên mobile */
     .shortcuts-helper {
         display: none !important;
+    }
+}
+
+/* Mobile Bottom Navigation Bar */
+.mobile-bottom-nav {
+    display: none; /* Mặc định ẩn trên Desktop */
+}
+
+@media (max-width: 768px) {
+    .mobile-bottom-nav {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr);
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 60px;
+        background: rgba(15, 23, 42, 0.92);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        z-index: 1000;
+        align-items: center;
+        justify-items: center;
+        box-sizing: border-box;
+    }
+
+    .mobile-nav-item {
+        background: transparent;
+        border: none;
+        color: var(--text-secondary);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.7rem;
+        font-family: var(--font-sans);
+        cursor: pointer;
+        width: 100%;
+        height: 100%;
+        justify-content: center;
+        transition: all 0.2s ease;
+        outline: none;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .mobile-nav-item i {
+        font-size: 1.25rem;
+        transition: transform 0.2s ease;
+    }
+
+    .mobile-nav-item.active {
+        color: var(--accent);
+    }
+
+    .mobile-nav-item.active i {
+        transform: scale(1.15);
+        color: var(--accent);
+        text-shadow: 0 0 10px rgba(6, 182, 212, 0.4);
+    }
+
+    .mobile-nav-item.active span {
+        color: var(--text-primary);
+        font-weight: 600;
     }
 }

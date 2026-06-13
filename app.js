@@ -331,6 +331,46 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // --- Mobile Bottom Navigation Logic ---
+    const mobileNavUpload = document.getElementById('mobile-nav-upload');
+    const mobileNavEdit = document.getElementById('mobile-nav-edit');
+    const mobileNavResult = document.getElementById('mobile-nav-result');
+    const appContainer = document.querySelector('.app-container');
+
+    const switchMobileTab = (tabId) => {
+        if (!appContainer) return;
+        
+        appContainer.classList.remove('mobile-tab-upload', 'mobile-tab-edit', 'mobile-tab-result');
+        appContainer.classList.add(`mobile-tab-${tabId}`);
+        
+        [mobileNavUpload, mobileNavEdit, mobileNavResult].forEach(btn => {
+            if (btn) {
+                if (btn.getAttribute('data-tab') === tabId) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            }
+        });
+
+        if (tabId === 'edit') {
+            switchTab('tab-live-grid');
+        } else if (tabId === 'result') {
+            switchTab('tab-result-grid');
+        } else if (tabId === 'upload') {
+            switchTab('tab-live-grid');
+        }
+    };
+
+    [mobileNavUpload, mobileNavEdit, mobileNavResult].forEach(btn => {
+        if (btn) {
+            btn.addEventListener('click', () => {
+                const tabId = btn.getAttribute('data-tab');
+                switchMobileTab(tabId);
+            });
+        }
+    });
+
     // --- Initialize Grid Lines (Evenly Distributed) ---
     const resetGridToEven = () => {
         if (!currentImage) return;
@@ -1484,6 +1524,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 setTimeout(() => {
                     handleParamsChange();
                     setSlicingMode(slicingMode);
+                    // Hiển thị tab cắt ảnh và tự động chuyển sang tab cắt ảnh trên mobile
+                    if (mobileNavEdit) mobileNavEdit.style.display = 'flex';
+                    if (mobileNavResult) mobileNavResult.style.display = 'none';
+                    switchMobileTab('edit');
                 }, 50);
             };
             img.src = event.target.result;
@@ -2376,6 +2420,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         tabBtnResult.disabled = false;
         switchTab('tab-result-grid');
+        
+        // Hiển thị tab kết quả (Thư viện) trên mobile và tự động chuyển sang tab kết quả
+        if (mobileNavResult) mobileNavResult.style.display = 'flex';
+        switchMobileTab('result');
     });
 
     function processSlice(sx, sy, cropW, cropH, sliceName, resultId, targetW, targetH) {
@@ -3037,6 +3085,11 @@ document.addEventListener('DOMContentLoaded', () => {
         
         switchTab('tab-live-grid');
         setSlicingMode('grid');
+        
+        // Reset tab trên di động về mặc định
+        if (mobileNavEdit) mobileNavEdit.style.display = 'none';
+        if (mobileNavResult) mobileNavResult.style.display = 'none';
+        switchMobileTab('upload');
     }
 
     // Shortcuts Helper UI Click Listeners
