@@ -2826,9 +2826,20 @@ input[type="number"] {
         justify-content: center !important;
     }
 
-    /* Đảm bảo history-section hiện đúng ở mobile-tab-upload */
+    /* Đảm bảo history-section hiện đúng ở mobile-tab-upload và chiếm trọn không gian còn lại chạm đáy bottombar */
     .app-container.mobile-tab-upload #sidebar .history-section {
-        display: block !important;
+        display: flex !important;
+        flex-direction: column !important;
+        flex: 1 !important;
+        min-height: 0 !important;
+        margin-top: 10px !important;
+        border-top: none !important;
+    }
+
+    .app-container.mobile-tab-upload #sidebar #history-list {
+        flex: 1 !important;
+        max-height: none !important;
+        overflow-y: auto !important;
     }
 
     .app-container.mobile-tab-edit #sidebar .history-section {
