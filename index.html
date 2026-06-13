@@ -187,6 +187,23 @@
                         </div>
                     </div>
 
+                    <!-- Global Slider (Applies to both modes) -->
+                    <div class="control-item" style="margin-bottom: 12px;">
+                        <div class="label-with-value">
+                            <label for="input-offset">
+                                <i class="fa-solid fa-border-none"></i> Xén viền ô (Offset Padding)
+                            </label>
+                        </div>
+                        <div class="offset-control-group">
+                            <input type="range" id="input-offset" min="0" max="50" value="0" step="1" class="slider">
+                            <div class="input-number-group offset-spinner">
+                                <button type="button" class="btn-spinner btn-minus" data-target="input-offset-number"><i class="fa-solid fa-minus"></i></button>
+                                <input type="number" id="input-offset-number" min="0" max="50" value="0">
+                                <button type="button" class="btn-spinner btn-plus" data-target="input-offset-number"><i class="fa-solid fa-plus"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Uniform constraints & Snap switchers in one row -->
                     <div class="control-group-grid snap-uniform-group" style="margin-top: 4px; margin-bottom: 12px;">
                         <div class="control-item">
@@ -209,23 +226,6 @@
                                     <input type="checkbox" id="switch-snap" class="switch-checkbox" checked>
                                     <label for="switch-snap" class="switch-label-btn"></label>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Global Slider (Applies to both modes) -->
-                    <div class="control-item">
-                        <div class="label-with-value">
-                            <label for="input-offset">
-                                <i class="fa-solid fa-border-none"></i> Xén viền ô (Offset Padding)
-                            </label>
-                        </div>
-                        <div class="offset-control-group">
-                            <input type="range" id="input-offset" min="0" max="50" value="0" step="1" class="slider">
-                            <div class="input-number-group offset-spinner">
-                                <button type="button" class="btn-spinner btn-minus" data-target="input-offset-number"><i class="fa-solid fa-minus"></i></button>
-                                <input type="number" id="input-offset-number" min="0" max="50" value="0">
-                                <button type="button" class="btn-spinner btn-plus" data-target="input-offset-number"><i class="fa-solid fa-plus"></i></button>
                             </div>
                         </div>
                     </div>
