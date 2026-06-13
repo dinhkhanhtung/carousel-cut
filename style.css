@@ -3548,9 +3548,9 @@ input[type="number"] {
 /* PC Account Popup */
 .auth-popup {
     position: absolute;
-    left: calc(100% + 12px);
-    bottom: 0;
-    width: 340px;
+    left: 0;
+    bottom: calc(100% + 8px);
+    width: 100%;
     background: rgba(15, 23, 42, 0.95);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
@@ -3565,7 +3565,7 @@ input[type="number"] {
     z-index: 1000;
     opacity: 0;
     visibility: hidden;
-    transform: translateX(-10px);
+    transform: translateY(10px);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: default;
 }
@@ -3573,7 +3573,7 @@ input[type="number"] {
 .auth-popup.active {
     opacity: 1;
     visibility: visible;
-    transform: translateX(0);
+    transform: translateY(0);
 }
 
 .auth-popup-header {
@@ -3784,8 +3784,9 @@ input[type="number"] {
 
 /* PC Account Popup: Minimal logout view when logged in */
 .auth-popup.user-logged-in {
-    width: 160px !important;
+    width: 100% !important;
     padding: 8px !important;
+    left: 0 !important;
 }
 
 .auth-popup.user-logged-in .auth-popup-header {
