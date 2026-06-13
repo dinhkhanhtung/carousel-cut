@@ -2264,9 +2264,10 @@ input[type="number"] {
     }
 
     .mode-btn {
-        padding: 6px 10px !important;
+        padding: 0 10px !important;
         font-size: 0.75rem !important;
-        height: 38px !important;
+        height: 100% !important;
+        box-sizing: border-box !important;
     }
 
     /* Dropzone kéo thả ảnh */
@@ -2360,12 +2361,18 @@ input[type="number"] {
         padding: 2px !important;
         gap: 2px !important;
         margin-bottom: 6px !important;
-        height: 36px !important;
+        height: 38px !important;
+        box-sizing: border-box !important;
     }
 
     .tab-btn {
-        padding: 6px 8px !important;
+        padding: 0 8px !important;
         font-size: 0.75rem !important;
+        height: 100% !important;
+        box-sizing: border-box !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
     }
 
     /* Canvas hiển thị to rõ ràng ở trên */
