@@ -1979,6 +1979,14 @@ input[type="number"] {
         min-height: 0 !important;
         order: 1 !important;
         overflow: hidden !important;
+        padding: 4px 12px !important; /* Giảm padding trên dưới để mở rộng diện tích dọc */
+    }
+    .app-container.mobile-tab-edit .view-panel .tab-content {
+        margin-top: 0 !important; /* Loại bỏ margin-top vì tab headers đã bị ẩn */
+        gap: 4px !important;
+    }
+    .app-container.mobile-tab-edit .view-panel .tab-pane {
+        gap: 4px !important;
     }
     .app-container.mobile-tab-edit .view-panel #tab-live-grid {
         display: flex !important;
