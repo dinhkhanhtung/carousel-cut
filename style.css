@@ -2465,7 +2465,7 @@ input[type="number"] {
 
     /* Smartphone Preview Modal */
     .mobile-preview-container {
-        padding-bottom: 40px !important; /* Đẩy nút Close bám sát đáy điện thoại hơn */
+        padding-bottom: 56px !important; /* Dịch điện thoại lên cao để không chạm/đè vào nút X */
     }
 
     .smartphone-shell {
