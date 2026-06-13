@@ -20,6 +20,10 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const selectRatio = document.getElementById('select-ratio');
     const selectExportScale = document.getElementById('select-export-scale');
+    const selectGridType = document.getElementById('select-grid-type');
+    const fbLayoutInfo = document.getElementById('fb-layout-info');
+    const fbLayoutDesc = document.getElementById('fb-layout-desc');
+    const gridEvenParameters = document.getElementById('grid-even-parameters');
     const switchUniform = document.getElementById('switch-uniform');
     const switchSnap = document.getElementById('switch-snap');
     
@@ -64,6 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let slicedBlobs = [];  // Array of { name, blob }
     
     let slicingMode = 'grid'; // 'grid' or 'box'
+    let gridType = 'even';    // 'even' | 'fb-1d3v' | 'fb-1n3v'
 
     // --- Mode 1: Grid Mode Variables ---
     let colsX = [];        // X coordinates of vertical grid lines. Length: cols - 1
@@ -411,6 +416,29 @@ document.addEventListener('DOMContentLoaded', () => {
     inputRows.addEventListener('input', handleParamsChange);
     inputCols.addEventListener('input', handleParamsChange);
     inputOffset.addEventListener('input', handleParamsChange);
+
+    if (selectGridType) {
+        selectGridType.addEventListener('change', () => {
+            gridType = selectGridType.value;
+            
+            if (gridType === 'even') {
+                if (gridEvenParameters) gridEvenParameters.style.display = 'grid';
+                if (fbLayoutInfo) fbLayoutInfo.style.display = 'none';
+                resetGridToEven();
+            } else {
+                if (gridEvenParameters) gridEvenParameters.style.display = 'none';
+                if (fbLayoutInfo) fbLayoutInfo.style.display = 'block';
+                
+                if (gridType === 'fb-1d3v') {
+                    if (fbLayoutDesc) fbLayoutDesc.innerHTML = '<strong>Bố cục 1 Dọc + 3 Vuông phải:</strong><br>Ảnh gốc sẽ chia làm 2 phần dọc (50% trái, 50% phải). Phần trái cắt 1 ảnh dọc to. Phần phải chia thành 3 ảnh nhỏ xếp chồng ngang bằng nhau.';
+                } else if (gridType === 'fb-1n3v') {
+                    if (fbLayoutDesc) fbLayoutDesc.innerHTML = '<strong>Bố cục 1 Ngang + 3 Vuông dưới:</strong><br>Ảnh gốc sẽ chia làm 2 phần ngang (50% trên, 50% dưới). Phần trên cắt 1 ảnh ngang to. Phần dưới chia thành 3 ảnh nhỏ xếp dọc bằng nhau.';
+                }
+            }
+            
+            handleParamsChange();
+        });
+    }
 
     // --- Smart Snapping Logic Helpers ---
     const SNAP_THRESHOLD = 8; // pixel trên ảnh gốc
@@ -1394,68 +1422,144 @@ document.addEventListener('DOMContentLoaded', () => {
         const offset = parseInt(inputOffset.value) || 0;
 
         if (slicingMode === 'grid') {
-            const boundariesX = [0, ...colsX, width];
-            const boundariesY = [0, ...rowsY, height];
+            // Định nghĩa các ô cắt [x1, y1, x2, y2, c, r, totalCols, totalRows] để tính offset
+            let cells = [];
+            if (gridType === 'even') {
+                const boundariesX = [0, ...colsX, width];
+                const boundariesY = [0, ...rowsY, height];
+                for (let r = 0; r < boundariesY.length - 1; r++) {
+                    for (let c = 0; c < boundariesX.length - 1; c++) {
+                        cells.push({
+                            x1: boundariesX[c],
+                            y1: boundariesY[r],
+                            x2: boundariesX[c + 1],
+                            y2: boundariesY[r + 1],
+                            c: c,
+                            r: r,
+                            totalCols: boundariesX.length - 1,
+                            totalRows: boundariesY.length - 1
+                        });
+                    }
+                }
+            } else if (gridType === 'fb-1d3v') {
+                const midX = width * 0.5;
+                const h1 = height * (1/3);
+                const h2 = height * (2/3);
+                
+                // Ô 1 (dọc trái)
+                cells.push({ x1: 0, y1: 0, x2: midX, y2: height, c: 0, r: 0, totalCols: 2, totalRows: 1 });
+                // Ô 2, 3, 4 (vuông phải)
+                cells.push({ x1: midX, y1: 0, x2: width, y2: h1, c: 1, r: 0, totalCols: 2, totalRows: 3 });
+                cells.push({ x1: midX, y1: h1, x2: width, y2: h2, c: 1, r: 1, totalCols: 2, totalRows: 3 });
+                cells.push({ x1: midX, y1: h2, x2: width, y2: height, c: 1, r: 2, totalCols: 2, totalRows: 3 });
+            } else if (gridType === 'fb-1n3v') {
+                const midY = height * 0.5;
+                const w1 = width * (1/3);
+                const w2 = width * (2/3);
+
+                // Ô 1 (ngang trên)
+                cells.push({ x1: 0, y1: 0, x2: width, y2: midY, c: 0, r: 0, totalCols: 1, totalRows: 2 });
+                // Ô 2, 3, 4 (vuông dưới)
+                cells.push({ x1: 0, y1: midY, x2: w1, y2: height, c: 0, r: 1, totalCols: 3, totalRows: 2 });
+                cells.push({ x1: w1, y1: midY, x2: w2, y2: height, c: 1, r: 1, totalCols: 3, totalRows: 2 });
+                cells.push({ x1: w2, y1: midY, x2: width, y2: height, c: 2, r: 1, totalCols: 3, totalRows: 2 });
+            }
 
             if (offset > 0) {
                 ctx.fillStyle = 'rgba(239, 68, 68, 0.25)';
-                for (let r = 0; r < boundariesY.length - 1; r++) {
-                    for (let c = 0; c < boundariesX.length - 1; c++) {
-                        const x1 = boundariesX[c];
-                        const x2 = boundariesX[c + 1];
-                        const y1 = boundariesY[r];
-                        const y2 = boundariesY[r + 1];
-                        const cellW = x2 - x1;
-                        const cellH = y2 - y1;
+                cells.forEach(cell => {
+                    const cellW = cell.x2 - cell.x1;
+                    const cellH = cell.y2 - cell.y1;
 
-                        const leftOffset = (c === 0) ? (2 * offset) : offset;
-                        const rightOffset = (c === boundariesX.length - 2) ? (2 * offset) : offset;
-                        const topOffset = (r === 0) ? (2 * offset) : offset;
-                        const bottomOffset = (r === boundariesY.length - 2) ? (2 * offset) : offset;
+                    const leftOffset = (cell.c === 0) ? (2 * offset) : offset;
+                    const rightOffset = (cell.c === cell.totalCols - 1) ? (2 * offset) : offset;
+                    const topOffset = (cell.r === 0) ? (2 * offset) : offset;
+                    const bottomOffset = (cell.r === cell.totalRows - 1) ? (2 * offset) : offset;
 
-                        ctx.fillRect(x1, y1, cellW, topOffset);
-                        ctx.fillRect(x1, y2 - bottomOffset, cellW, bottomOffset);
-                        ctx.fillRect(x1, y1 + topOffset, leftOffset, cellH - topOffset - bottomOffset);
-                        ctx.fillRect(x2 - rightOffset, y1 + topOffset, rightOffset, cellH - topOffset - bottomOffset);
-                    }
-                }
+                    ctx.fillRect(cell.x1, cell.y1, cellW, topOffset);
+                    ctx.fillRect(cell.x1, cell.y2 - bottomOffset, cellW, bottomOffset);
+                    ctx.fillRect(cell.x1, cell.y1 + topOffset, leftOffset, cellH - topOffset - bottomOffset);
+                    ctx.fillRect(cell.x2 - rightOffset, cell.y1 + topOffset, rightOffset, cellH - topOffset - bottomOffset);
+                });
             }
 
             ctx.strokeStyle = '#06b6d4';
             ctx.lineWidth = Math.max(2, Math.floor(width / 600));
             ctx.setLineDash([ctx.lineWidth * 3, ctx.lineWidth * 2]);
-            colsX.forEach(x => {
+            
+            if (gridType === 'even') {
+                colsX.forEach(x => {
+                    ctx.beginPath();
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, height);
+                    ctx.stroke();
+                });
+                rowsY.forEach(y => {
+                    ctx.beginPath();
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(width, y);
+                    ctx.stroke();
+                });
+            } else if (gridType === 'fb-1d3v') {
+                const midX = width * 0.5;
+                const h1 = height * (1/3);
+                const h2 = height * (2/3);
+                
+                // Vẽ đường chia đôi dọc
                 ctx.beginPath();
-                ctx.moveTo(x, 0);
-                ctx.lineTo(x, height);
+                ctx.moveTo(midX, 0);
+                ctx.lineTo(midX, height);
                 ctx.stroke();
-            });
-
-            rowsY.forEach(y => {
+                
+                // Vẽ 2 đường chia ngang bên phải
                 ctx.beginPath();
-                ctx.moveTo(0, y);
-                ctx.lineTo(width, y);
+                ctx.moveTo(midX, h1);
+                ctx.lineTo(width, h1);
                 ctx.stroke();
-            });
+                
+                ctx.beginPath();
+                ctx.moveTo(midX, h2);
+                ctx.lineTo(width, h2);
+                ctx.stroke();
+            } else if (gridType === 'fb-1n3v') {
+                const midY = height * 0.5;
+                const w1 = width * (1/3);
+                const w2 = width * (2/3);
+                
+                // Vẽ đường chia đôi ngang
+                ctx.beginPath();
+                ctx.moveTo(0, midY);
+                ctx.lineTo(width, midY);
+                ctx.stroke();
+                
+                // Vẽ 2 đường chia dọc bên dưới
+                ctx.beginPath();
+                ctx.moveTo(w1, midY);
+                ctx.lineTo(w1, height);
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.moveTo(w2, midY);
+                ctx.lineTo(w2, height);
+                ctx.stroke();
+            }
 
             if (offset > 0) {
                 ctx.strokeStyle = '#10b981';
                 ctx.lineWidth = Math.max(1, Math.floor(width / 800));
                 ctx.setLineDash([ctx.lineWidth * 2, ctx.lineWidth * 2]);
-                for (let r = 0; r < boundariesY.length - 1; r++) {
-                    for (let c = 0; c < boundariesX.length - 1; c++) {
-                        const leftOffset = (c === 0) ? (2 * offset) : offset;
-                        const rightOffset = (c === boundariesX.length - 2) ? (2 * offset) : offset;
-                        const topOffset = (r === 0) ? (2 * offset) : offset;
-                        const bottomOffset = (r === boundariesY.length - 2) ? (2 * offset) : offset;
+                cells.forEach(cell => {
+                    const leftOffset = (cell.c === 0) ? (2 * offset) : offset;
+                    const rightOffset = (cell.c === cell.totalCols - 1) ? (2 * offset) : offset;
+                    const topOffset = (cell.r === 0) ? (2 * offset) : offset;
+                    const bottomOffset = (cell.r === cell.totalRows - 1) ? (2 * offset) : offset;
 
-                        const sx = boundariesX[c] + leftOffset;
-                        const sy = boundariesY[r] + topOffset;
-                        const sw = (boundariesX[c + 1] - boundariesX[c]) - leftOffset - rightOffset;
-                        const sh = (boundariesY[r + 1] - boundariesY[r]) - topOffset - bottomOffset;
-                        ctx.strokeRect(sx, sy, sw, sh);
-                    }
-                }
+                    const sx = cell.x1 + leftOffset;
+                    const sy = cell.y1 + topOffset;
+                    const sw = (cell.x2 - cell.x1) - leftOffset - rightOffset;
+                    const sh = (cell.y2 - cell.y1) - topOffset - bottomOffset;
+                    ctx.strokeRect(sx, sy, sw, sh);
+                });
             }
         } else {
             selectionBoxes.forEach((box, idx) => {
@@ -1878,70 +1982,139 @@ document.addEventListener('DOMContentLoaded', () => {
         let targetW, targetH;
 
         if (slicingMode === 'grid') {
-            const rows = parseInt(inputRows.value) || 1;
-            const cols = parseInt(inputCols.value) || 1;
-            const boundariesX = [0, ...colsX, width];
-            const boundariesY = [0, ...rowsY, height];
+            if (gridType === 'even') {
+                const rows = parseInt(inputRows.value) || 1;
+                const cols = parseInt(inputCols.value) || 1;
+                const boundariesX = [0, ...colsX, width];
+                const boundariesY = [0, ...rowsY, height];
 
-            // Xác định kích thước canvas đích chung từ ô đầu tiên
-            const firstCellW = boundariesX[1] - boundariesX[0];
-            const firstCellH = boundariesY[1] - boundariesY[0];
-            
-            // Xén rìa ngoài cùng gấp đôi (2 * offset) để loại bỏ sạch viền trắng mép ngoài
-            const firstLeftOffset = (2 * offset);
-            const firstRightOffset = (cols === 1) ? (2 * offset) : offset;
-            const firstTopOffset = (2 * offset);
-            const firstBottomOffset = (rows === 1) ? (2 * offset) : offset;
+                // Xác định kích thước canvas đích chung từ ô đầu tiên
+                const firstCellW = boundariesX[1] - boundariesX[0];
+                const firstCellH = boundariesY[1] - boundariesY[0];
+                
+                // Xén rìa ngoài cùng gấp đôi (2 * offset) để loại bỏ sạch viền trắng mép ngoài
+                const firstLeftOffset = (2 * offset);
+                const firstRightOffset = (cols === 1) ? (2 * offset) : offset;
+                const firstTopOffset = (2 * offset);
+                const firstBottomOffset = (rows === 1) ? (2 * offset) : offset;
 
-            const firstCropW = firstCellW - firstLeftOffset - firstRightOffset;
-            const firstCropH = firstCellH - firstTopOffset - firstBottomOffset;
+                const firstCropW = firstCellW - firstLeftOffset - firstRightOffset;
+                const firstCropH = firstCellH - firstTopOffset - firstBottomOffset;
 
-            if (firstCropW <= 0 || firstCropH <= 0) {
-                alert("Kích thước ô lưới đầu tiên sau khi xén viền nhỏ hơn 0. Hãy giảm Offset!");
-                return;
-            }
+                if (firstCropW <= 0 || firstCropH <= 0) {
+                    alert("Kích thước ô lưới đầu tiên sau khi xén viền nhỏ hơn 0. Hãy giảm Offset!");
+                    return;
+                }
 
-            if (!globalTargetW || !globalTargetH) {
-                const scale = getExportScale(firstCropW);
-                globalTargetW = Math.round(firstCropW * scale);
-                globalTargetH = Math.round(firstCropH * scale);
-            }
-            targetW = globalTargetW;
-            targetH = globalTargetH;
+                if (!globalTargetW || !globalTargetH) {
+                    const scale = getExportScale(firstCropW);
+                    globalTargetW = Math.round(firstCropW * scale);
+                    globalTargetH = Math.round(firstCropH * scale);
+                }
+                targetW = globalTargetW;
+                targetH = globalTargetH;
 
-            const totalNewCells = rows * cols;
-            let count = 1;
-            for (let r = 0; r < rows; r++) {
-                for (let c = 0; c < cols; c++) {
-                    const x1 = boundariesX[c];
-                    const x2 = boundariesX[c + 1];
-                    const y1 = boundariesY[r];
-                    const y2 = boundariesY[r + 1];
+                const totalNewCells = rows * cols;
+                let count = 1;
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        const x1 = boundariesX[c];
+                        const x2 = boundariesX[c + 1];
+                        const y1 = boundariesY[r];
+                        const y2 = boundariesY[r + 1];
 
-                    const cellW = x2 - x1;
-                    const cellH = y2 - y1;
+                        const cellW = x2 - x1;
+                        const cellH = y2 - y1;
 
-                    // Xén rìa ngoài cùng gấp đôi (2 * offset) để loại bỏ sạch viền trắng mép ngoài
-                    const leftOffset = (c === 0) ? (2 * offset) : offset;
-                    const rightOffset = (c === cols - 1) ? (2 * offset) : offset;
-                    const topOffset = (r === 0) ? (2 * offset) : offset;
-                    const bottomOffset = (r === rows - 1) ? (2 * offset) : offset;
+                        // Xén rìa ngoài cùng gấp đôi (2 * offset) để loại bỏ sạch viền trắng mép ngoài
+                        const leftOffset = (c === 0) ? (2 * offset) : offset;
+                        const rightOffset = (c === cols - 1) ? (2 * offset) : offset;
+                        const topOffset = (r === 0) ? (2 * offset) : offset;
+                        const bottomOffset = (r === rows - 1) ? (2 * offset) : offset;
 
-                    const sx = x1 + leftOffset;
-                    const sy = y1 + topOffset;
-                    const cropW = cellW - leftOffset - rightOffset;
-                    const cropH = cellH - topOffset - bottomOffset;
+                        const sx = x1 + leftOffset;
+                        const sy = y1 + topOffset;
+                        const cropW = cellW - leftOffset - rightOffset;
+                        const cropH = cellH - topOffset - bottomOffset;
 
-                    if (cropW <= 0 || cropH <= 0) {
-                        alert(`Kích thước ô [Hàng ${r+1}, Cột ${c+1}] sau khi xén viền nhỏ hơn 0. Hãy giảm Offset hoặc điều chỉnh đường lưới rộng hơn!`);
-                        return;
+                        if (cropW <= 0 || cropH <= 0) {
+                            alert(`Kích thước ô [Hàng ${r+1}, Cột ${c+1}] sau khi xén viền nhỏ hơn 0. Hãy giảm Offset hoặc điều chỉnh đường lưới rộng hơn!`);
+                            return;
+                        }
+
+                        const resultId = resultIdCounter++;
+                        const sliceName = `slide_${startIndex + count}.png`;
+                        processSlice(sx, sy, cropW, cropH, sliceName, resultId, targetW, targetH);
+                        count++;
                     }
+                }
+            } else {
+                // Facebook Asymmetric Grid Layouts
+                let gridCells = [];
+                if (gridType === 'fb-1d3v') {
+                    const midX = width * 0.5;
+                    const h1 = height * (1/3);
+                    const h2 = height * (2/3);
+
+                    // Ô 1 (to)
+                    gridCells.push({ x1: 0, y1: 0, x2: midX, y2: height, left: 2*offset, right: offset, top: 2*offset, bottom: 2*offset, isLarge: true });
+                    // Ô 2, 3, 4 (nhỏ)
+                    gridCells.push({ x1: midX, y1: 0, x2: width, y2: h1, left: offset, right: 2*offset, top: 2*offset, bottom: offset, isLarge: false });
+                    gridCells.push({ x1: midX, y1: h1, x2: width, y2: h2, left: offset, right: 2*offset, top: offset, bottom: offset, isLarge: false });
+                    gridCells.push({ x1: midX, y1: h2, x2: width, y2: height, left: offset, right: 2*offset, top: offset, bottom: 2*offset, isLarge: false });
+                } else if (gridType === 'fb-1n3v') {
+                    const midY = height * 0.5;
+                    const w1 = width * (1/3);
+                    const w2 = width * (2/3);
+
+                    // Ô 1 (to)
+                    gridCells.push({ x1: 0, y1: 0, x2: width, y2: midY, left: 2*offset, right: 2*offset, top: 2*offset, bottom: offset, isLarge: true });
+                    // Ô 2, 3, 4 (nhỏ)
+                    gridCells.push({ x1: 0, y1: midY, x2: w1, y2: height, left: 2*offset, right: offset, top: offset, bottom: 2*offset, isLarge: false });
+                    gridCells.push({ x1: w1, y1: midY, x2: w2, y2: height, left: offset, right: offset, top: offset, bottom: 2*offset, isLarge: false });
+                    gridCells.push({ x1: w2, y1: midY, x2: width, y2: height, left: offset, right: 2*offset, top: offset, bottom: 2*offset, isLarge: false });
+                }
+
+                // Tính toán kích thước canvas đích
+                // 1. Nhóm 1: Ảnh to
+                const largeCell = gridCells[0];
+                const largeCropW = (largeCell.x2 - largeCell.x1) - largeCell.left - largeCell.right;
+                const largeCropH = (largeCell.y2 - largeCell.y1) - largeCell.top - largeCell.bottom;
+                if (largeCropW <= 0 || largeCropH <= 0) {
+                    alert("Kích thước ô to sau khi xén viền nhỏ hơn 0. Hãy giảm Offset!");
+                    return;
+                }
+                const largeScale = getExportScale(largeCropW);
+                const targetW_large = Math.round(largeCropW * largeScale);
+                const targetH_large = Math.round(largeCropH * largeScale);
+
+                // 2. Nhóm 2: 3 Ảnh nhỏ (lấy ô nhỏ đầu tiên để đồng bộ kích thước chuẩn cho cả 3)
+                const smallCell = gridCells[1];
+                const smallCropW = (smallCell.x2 - smallCell.x1) - smallCell.left - smallCell.right;
+                const smallCropH = (smallCell.y2 - smallCell.y1) - smallCell.top - smallCell.bottom;
+                if (smallCropW <= 0 || smallCropH <= 0) {
+                    alert("Kích thước ô nhỏ sau khi xén viền nhỏ hơn 0. Hãy giảm Offset!");
+                    return;
+                }
+                const smallScale = getExportScale(smallCropW);
+                const targetW_small = Math.round(smallCropW * smallScale);
+                const targetH_small = Math.round(smallCropH * smallScale);
+
+                // Cắt 4 slide
+                gridCells.forEach((cell, idx) => {
+                    const sx = cell.x1 + cell.left;
+                    const sy = cell.y1 + cell.top;
+                    const cropW = (cell.x2 - cell.x1) - cell.left - cell.right;
+                    const cropH = (cell.y2 - cell.y1) - cell.top - cell.bottom;
 
                     const resultId = resultIdCounter++;
-                    const sliceName = `slide_${startIndex + count}.png`;
-                    processSlice(sx, sy, cropW, cropH, sliceName, resultId, targetW, targetH);
-                    count++;
-                }
+                    const sliceName = `slide_${startIndex + idx + 1}.png`;
+                    
+                    const tW = cell.isLarge ? targetW_large : targetW_small;
+                    const tH = cell.isLarge ? targetH_large : targetH_small;
+
+                    processSlice(sx, sy, cropW, cropH, sliceName, resultId, tW, tH);
+                });
             }
         } else {
             if (selectionBoxes.length === 0) {

@@ -87,7 +87,23 @@
                 <div class="params-container">
                     <!-- Grid Mode Controls -->
                     <div id="controls-grid-mode" class="controls-pane active">
-                        <div class="control-group-grid">
+                        <div class="control-item" style="margin-bottom: 12px;">
+                            <label for="select-grid-type">
+                                <i class="fa-solid fa-table-cells" style="color: #06b6d4;"></i> Bố cục lưới (Grid Layout)
+                            </label>
+                            <select id="select-grid-type">
+                                <option value="even" selected>Chia đều (Hàng x Cột)</option>
+                                <option value="fb-1d3v">Facebook: 1 Dọc + 3 Vuông phải</option>
+                                <option value="fb-1n3v">Facebook: 1 Ngang + 3 Vuông dưới</option>
+                            </select>
+                        </div>
+
+                        <!-- Facebook Layout Description -->
+                        <div id="fb-layout-info" style="display: none; font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.4; background: rgba(255, 255, 255, 0.03); padding: 8px 10px; border-radius: 4px; border-left: 3px solid var(--accent);">
+                            <span id="fb-layout-desc"></span>
+                        </div>
+
+                        <div class="control-group-grid" id="grid-even-parameters">
                             <div class="control-item">
                                 <label for="input-rows">
                                     <i class="fa-solid fa-arrows-up-down"></i> Số hàng (Rows)
