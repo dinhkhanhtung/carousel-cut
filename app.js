@@ -1408,10 +1408,15 @@ document.addEventListener('DOMContentLoaded', () => {
                         const cellW = x2 - x1;
                         const cellH = y2 - y1;
 
-                        ctx.fillRect(x1, y1, cellW, offset);
-                        ctx.fillRect(x1, y2 - offset, cellW, offset);
-                        ctx.fillRect(x1, y1 + offset, offset, cellH - (2 * offset));
-                        ctx.fillRect(x2 - offset, y1 + offset, offset, cellH - (2 * offset));
+                        const leftOffset = (c === 0) ? (2 * offset) : offset;
+                        const rightOffset = (c === boundariesX.length - 2) ? (2 * offset) : offset;
+                        const topOffset = (r === 0) ? (2 * offset) : offset;
+                        const bottomOffset = (r === boundariesY.length - 2) ? (2 * offset) : offset;
+
+                        ctx.fillRect(x1, y1, cellW, topOffset);
+                        ctx.fillRect(x1, y2 - bottomOffset, cellW, bottomOffset);
+                        ctx.fillRect(x1, y1 + topOffset, leftOffset, cellH - topOffset - bottomOffset);
+                        ctx.fillRect(x2 - rightOffset, y1 + topOffset, rightOffset, cellH - topOffset - bottomOffset);
                     }
                 }
             }
@@ -1439,10 +1444,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 ctx.setLineDash([ctx.lineWidth * 2, ctx.lineWidth * 2]);
                 for (let r = 0; r < boundariesY.length - 1; r++) {
                     for (let c = 0; c < boundariesX.length - 1; c++) {
-                        const sx = boundariesX[c] + offset;
-                        const sy = boundariesY[r] + offset;
-                        const sw = (boundariesX[c + 1] - boundariesX[c]) - (2 * offset);
-                        const sh = (boundariesY[r + 1] - boundariesY[r]) - (2 * offset);
+                        const leftOffset = (c === 0) ? (2 * offset) : offset;
+                        const rightOffset = (c === boundariesX.length - 2) ? (2 * offset) : offset;
+                        const topOffset = (r === 0) ? (2 * offset) : offset;
+                        const bottomOffset = (r === boundariesY.length - 2) ? (2 * offset) : offset;
+
+                        const sx = boundariesX[c] + leftOffset;
+                        const sy = boundariesY[r] + topOffset;
+                        const sw = (boundariesX[c + 1] - boundariesX[c]) - leftOffset - rightOffset;
+                        const sh = (boundariesY[r + 1] - boundariesY[r]) - topOffset - bottomOffset;
                         ctx.strokeRect(sx, sy, sw, sh);
                     }
                 }
@@ -1876,8 +1886,15 @@ document.addEventListener('DOMContentLoaded', () => {
             // Xác định kích thước canvas đích chung từ ô đầu tiên
             const firstCellW = boundariesX[1] - boundariesX[0];
             const firstCellH = boundariesY[1] - boundariesY[0];
-            const firstCropW = firstCellW - (2 * offset);
-            const firstCropH = firstCellH - (2 * offset);
+            
+            // Xén rìa ngoài cùng gấp đôi (2 * offset) để loại bỏ sạch viền trắng mép ngoài
+            const firstLeftOffset = (2 * offset);
+            const firstRightOffset = (cols === 1) ? (2 * offset) : offset;
+            const firstTopOffset = (2 * offset);
+            const firstBottomOffset = (rows === 1) ? (2 * offset) : offset;
+
+            const firstCropW = firstCellW - firstLeftOffset - firstRightOffset;
+            const firstCropH = firstCellH - firstTopOffset - firstBottomOffset;
 
             if (firstCropW <= 0 || firstCropH <= 0) {
                 alert("Kích thước ô lưới đầu tiên sau khi xén viền nhỏ hơn 0. Hãy giảm Offset!");
@@ -1904,10 +1921,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     const cellW = x2 - x1;
                     const cellH = y2 - y1;
 
-                    const sx = x1 + offset;
-                    const sy = y1 + offset;
-                    const cropW = cellW - (2 * offset);
-                    const cropH = cellH - (2 * offset);
+                    // Xén rìa ngoài cùng gấp đôi (2 * offset) để loại bỏ sạch viền trắng mép ngoài
+                    const leftOffset = (c === 0) ? (2 * offset) : offset;
+                    const rightOffset = (c === cols - 1) ? (2 * offset) : offset;
+                    const topOffset = (r === 0) ? (2 * offset) : offset;
+                    const bottomOffset = (r === rows - 1) ? (2 * offset) : offset;
+
+                    const sx = x1 + leftOffset;
+                    const sy = y1 + topOffset;
+                    const cropW = cellW - leftOffset - rightOffset;
+                    const cropH = cellH - topOffset - bottomOffset;
 
                     if (cropW <= 0 || cropH <= 0) {
                         alert(`Kích thước ô [Hàng ${r+1}, Cột ${c+1}] sau khi xén viền nhỏ hơn 0. Hãy giảm Offset hoặc điều chỉnh đường lưới rộng hơn!`);
