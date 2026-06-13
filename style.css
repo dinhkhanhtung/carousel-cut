@@ -944,9 +944,11 @@ input[type="number"] {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 8px 4px 12px 4px;
-    border-bottom: 1px solid var(--border-color);
-    margin-bottom: 12px;
+    padding: 12px 4px 8px 4px;
+    border-top: 1px solid var(--border-color);
+    margin-top: 12px;
+    order: 2;
+    flex-shrink: 0;
 }
 
 .result-stats {
@@ -978,6 +980,7 @@ input[type="number"] {
     overflow-y: auto;
     padding-right: 8px;
     min-height: 0;
+    order: 1;
 }
 
 .result-grid {
