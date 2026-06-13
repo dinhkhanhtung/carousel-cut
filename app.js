@@ -2601,54 +2601,107 @@ document.addEventListener('DOMContentLoaded', () => {
         resultItem.addEventListener('drop', handleDrop);
         resultItem.addEventListener('dragend', handleDragEnd);
 
-        // Touch Drag & Drop for mobile
-        let touchStartItem = null;
-        let touchDragOverEl = null;
-
+        // Touch Drag & Drop for mobile (Long Press on entire card)
         resultItem.addEventListener('touchstart', (e) => {
-            if (e.target.closest('.result-item-grip')) {
-                touchStartItem = resultItem;
-                resultItem.classList.add('dragging');
-                e.preventDefault();
+            // Tránh kích hoạt touch drag nếu chạm vào các nút xóa, tải xuống, hoặc ô đổi tên
+            if (e.target.closest('.result-item-btn-del') || e.target.closest('.result-item-btn-dl') || e.target.closest('.result-item-name-container')) {
+                return;
             }
-        }, { passive: false });
-
-        resultItem.addEventListener('touchmove', (e) => {
-            if (!touchStartItem) return;
-            e.preventDefault();
             
             const touch = e.touches[0];
+            touchStartX = touch.clientX;
+            touchStartY = touch.clientY;
+            isTouchDragging = false;
+            
+            // Đặt timer sau 250ms sẽ chuyển sang chế độ kéo thả
+            touchTimer = setTimeout(() => {
+                isTouchDragging = true;
+                touchSourceEl = resultItem;
+                resultItem.classList.add('dragging');
+                
+                // Rung nhẹ nếu thiết bị hỗ trợ
+                if (navigator.vibrate) {
+                    navigator.vibrate(40);
+                }
+            }, 250);
+        }, { passive: true });
+
+        resultItem.addEventListener('touchmove', (e) => {
+            const touch = e.touches[0];
+            const diffX = Math.abs(touch.clientX - touchStartX);
+            const diffY = Math.abs(touch.clientY - touchStartY);
+            
+            if (!isTouchDragging) {
+                // Nếu người dùng di chuyển tay quá 8px trước khi timer kích hoạt kéo thả,
+                // hủy timer kéo thả để cho phép họ cuộn danh sách bình thường
+                if (diffX > 8 || diffY > 8) {
+                    clearTimeout(touchTimer);
+                }
+                return;
+            }
+            
+            // Nếu đã ở chế độ kéo thả, ngăn cuộn màn hình
+            if (e.cancelable) {
+                e.preventDefault();
+            }
+            
+            // Tìm card đích dưới ngón tay
             const elementUnder = document.elementFromPoint(touch.clientX, touch.clientY);
             const targetItem = elementUnder ? elementUnder.closest('.result-item') : null;
-
+            
+            // Xóa highlight trên các card khác
             document.querySelectorAll('.result-item').forEach(item => {
                 if (item !== targetItem) {
                     item.classList.remove('drag-over');
                 }
             });
-
-            if (targetItem && targetItem !== touchStartItem) {
-                touchDragOverEl = targetItem;
+            
+            if (targetItem && targetItem !== touchSourceEl) {
                 targetItem.classList.add('drag-over');
-            } else {
-                touchDragOverEl = null;
+                
+                // Thực hiện di chuyển DOM ngay trong lúc di chuyển ngón tay giống như PC!
+                const children = Array.from(resultGrid.children);
+                const idxSource = children.indexOf(touchSourceEl);
+                const idxTarget = children.indexOf(targetItem);
+                
+                if (idxSource < idxTarget) {
+                    targetItem.parentNode.insertBefore(touchSourceEl, targetItem.nextSibling);
+                } else {
+                    targetItem.parentNode.insertBefore(touchSourceEl, targetItem);
+                }
             }
         }, { passive: false });
 
         resultItem.addEventListener('touchend', (e) => {
-            if (!touchStartItem) return;
+            clearTimeout(touchTimer);
             
-            touchStartItem.classList.remove('dragging');
-            
-            if (touchDragOverEl && touchDragOverEl !== touchStartItem) {
-                touchDragOverEl.classList.remove('drag-over');
+            if (isTouchDragging && touchSourceEl) {
+                if (e.cancelable) {
+                    e.preventDefault();
+                }
+                touchSourceEl.classList.remove('dragging');
+                document.querySelectorAll('.result-item').forEach(item => {
+                    item.classList.remove('drag-over');
+                });
                 
-                touchDragOverEl.parentNode.insertBefore(touchStartItem, touchDragOverEl);
+                // Đồng bộ lại thứ tự mảng dữ liệu
                 syncArraysOrder();
+                
+                isTouchDragging = false;
+                touchSourceEl = null;
             }
-            
-            touchStartItem = null;
-            touchDragOverEl = null;
+        });
+        
+        resultItem.addEventListener('touchcancel', () => {
+            clearTimeout(touchTimer);
+            if (isTouchDragging && touchSourceEl) {
+                touchSourceEl.classList.remove('dragging');
+                document.querySelectorAll('.result-item').forEach(item => {
+                    item.classList.remove('drag-over');
+                });
+                isTouchDragging = false;
+                touchSourceEl = null;
+            }
         });
 
         // Bổ sung sự kiện click xem ảnh full cho di động (Mobile Lightbox dùng chính modal Mobile Preview)
@@ -2689,7 +2742,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Drag & Drop for Result Items ---
-    let dragSourceEl = null;
+    let dragSourceEl = null;      // PC drag source
+    let touchSourceEl = null;     // Mobile touch source
+    let touchTimer = null;        // Long press timer
+    let touchStartX = 0;          // Touch start coords
+    let touchStartY = 0;
+    let isTouchDragging = false;  // Touch dragging state
 
     function handleDragStart(e) {
         this.classList.add('dragging');
@@ -2703,11 +2761,25 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
         }
         e.dataTransfer.dropEffect = 'move';
+
+        if (dragSourceEl && dragSourceEl !== this) {
+            const children = Array.from(resultGrid.children);
+            const idxSource = children.indexOf(dragSourceEl);
+            const idxTarget = children.indexOf(this);
+            
+            if (idxSource < idxTarget) {
+                this.parentNode.insertBefore(dragSourceEl, this.nextSibling);
+            } else {
+                this.parentNode.insertBefore(dragSourceEl, this);
+            }
+        }
         return false;
     }
 
     function handleDragEnter(e) {
-        this.classList.add('drag-over');
+        if (dragSourceEl !== this) {
+            this.classList.add('drag-over');
+        }
     }
 
     function handleDragLeave(e) {
@@ -2717,19 +2789,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleDrop(e) {
         e.stopPropagation();
         e.preventDefault();
-        
-        if (dragSourceEl !== this) {
-            const rect = this.getBoundingClientRect();
-            const next = (e.clientX - rect.left) > (rect.width / 2);
-            
-            if (next) {
-                this.parentNode.insertBefore(dragSourceEl, this.nextSibling);
-            } else {
-                this.parentNode.insertBefore(dragSourceEl, this);
-            }
-            
-            syncArraysOrder();
-        }
         return false;
     }
 
@@ -2738,6 +2797,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.result-item').forEach(item => {
             item.classList.remove('drag-over');
         });
+        syncArraysOrder();
     }
 
     function syncArraysOrder() {
