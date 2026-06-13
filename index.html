@@ -31,13 +31,13 @@
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Styling -->
-    <link rel="stylesheet" href="style.css?v=2.1.0">
+    <link rel="stylesheet" href="style.css?v=2.2.0">
     <!-- JSZip Library (CDN) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
     <!-- Supabase Client Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- App Logic -->
-    <script src="app.js?v=2.1.0" defer></script>
+    <script src="app.js?v=2.2.0" defer></script>
 </head>
 <body>
     <div class="app-container mobile-tab-upload">
@@ -97,13 +97,21 @@
                         <div class="auth-section mobile-auth-section" id="mobile-auth-section">
                             <!-- Logged out view -->
                             <div class="auth-logged-out" id="mobile-auth-logged-out">
-                                <div class="auth-input-group">
-                                    <input type="text" id="mobile-username-input" placeholder="Tên đăng nhập..." maxlength="30">
-                                    <input type="password" id="mobile-password-input" placeholder="Mật khẩu...">
+                                <div class="auth-title" id="mobile-auth-title">Đăng Nhập Hệ Thống</div>
+                                <div class="auth-input-wrapper">
+                                    <i class="fa-solid fa-user auth-input-icon"></i>
+                                    <input type="text" id="mobile-username-input" placeholder="Tên đăng nhập" maxlength="30">
                                 </div>
-                                <div class="auth-actions">
-                                    <button type="button" class="btn btn-primary btn-auth-action" id="btn-mobile-login">Đăng nhập</button>
-                                    <button type="button" class="btn btn-secondary btn-auth-action" id="btn-mobile-register">Đăng ký</button>
+                                <div class="auth-input-wrapper">
+                                    <i class="fa-solid fa-lock auth-input-icon"></i>
+                                    <input type="password" id="mobile-password-input" placeholder="Mật khẩu">
+                                </div>
+                                <div class="auth-buttons-container">
+                                    <button type="button" class="btn btn-primary btn-auth-submit" id="btn-mobile-auth-submit">Đăng nhập</button>
+                                </div>
+                                <div class="auth-switch-mode">
+                                    <span id="mobile-auth-switch-text">Chưa có tài khoản?</span> 
+                                    <a href="#" id="link-mobile-auth-switch">Đăng ký ngay</a>
                                 </div>
                             </div>
                             <!-- Logged in view -->
@@ -112,8 +120,8 @@
                                     <i class="fa-solid fa-circle-user"></i>
                                     <span class="auth-username" id="mobile-auth-username">username</span>
                                 </div>
-                                <button type="button" class="btn btn-danger btn-auth-logout" id="btn-mobile-logout" title="Đăng xuất">
-                                    <i class="fa-solid fa-right-from-bracket"></i>
+                                <button type="button" class="btn-auth-logout" id="btn-mobile-logout" title="Đăng xuất">
+                                    <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
                                 </button>
                             </div>
                         </div>
@@ -473,13 +481,21 @@
                 <div class="auth-section" id="pc-auth-section">
                     <!-- Logged out view -->
                     <div class="auth-logged-out" id="pc-auth-logged-out">
-                        <div class="auth-inputs-container">
+                        <div class="auth-title" id="pc-auth-title">Đăng Nhập Hệ Thống</div>
+                        <div class="auth-input-wrapper">
+                            <i class="fa-solid fa-user auth-input-icon"></i>
                             <input type="text" id="pc-username-input" placeholder="Tên đăng nhập" maxlength="30">
+                        </div>
+                        <div class="auth-input-wrapper">
+                            <i class="fa-solid fa-lock auth-input-icon"></i>
                             <input type="password" id="pc-password-input" placeholder="Mật khẩu">
                         </div>
                         <div class="auth-buttons-container">
-                            <button type="button" class="btn btn-primary btn-auth-action" id="btn-pc-login">Đăng nhập</button>
-                            <button type="button" class="btn btn-secondary btn-auth-action" id="btn-pc-register">Đăng ký</button>
+                            <button type="button" class="btn btn-primary btn-auth-submit" id="btn-pc-auth-submit">Đăng nhập</button>
+                        </div>
+                        <div class="auth-switch-mode">
+                            <span id="pc-auth-switch-text">Chưa có tài khoản?</span> 
+                            <a href="#" id="link-pc-auth-switch">Đăng ký ngay</a>
                         </div>
                     </div>
                     <!-- Logged in view -->
@@ -488,7 +504,7 @@
                             <i class="fa-solid fa-circle-user"></i>
                             <span class="auth-username" id="pc-auth-username">username</span>
                         </div>
-                        <button type="button" class="btn btn-danger btn-auth-logout" id="btn-pc-logout">
+                        <button type="button" class="btn-auth-logout" id="btn-pc-logout">
                             <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
                         </button>
                     </div>

@@ -3374,6 +3374,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Biến toàn cục lưu username của tài khoản đăng nhập làm key đồng bộ
     let syncKey = localStorage.getItem('carousel_logged_user') || '';
+    
+    // Biến trạng thái chế độ Auth (login hoặc register)
+    let pcAuthMode = 'login';
+    let mobileAuthMode = 'login';
 
     // Cập nhật trạng thái giao diện tài khoản (Auth UI)
     function updateAuthUI() {
@@ -3399,7 +3403,30 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (mobileUsername) mobileUsername.textContent = syncKey;
             }
         } else {
-            // Chưa đăng nhập
+            // Chưa đăng nhập, reset các mode về mặc định (login)
+            pcAuthMode = 'login';
+            mobileAuthMode = 'login';
+
+            const pcAuthTitle = document.getElementById('pc-auth-title');
+            const btnPcAuthSubmit = document.getElementById('btn-pc-auth-submit');
+            const pcAuthSwitchText = document.getElementById('pc-auth-switch-text');
+            const linkPcAuthSwitch = document.getElementById('link-pc-auth-switch');
+
+            const mobileAuthTitle = document.getElementById('mobile-auth-title');
+            const btnMobileAuthSubmit = document.getElementById('btn-mobile-auth-submit');
+            const mobileAuthSwitchText = document.getElementById('mobile-auth-switch-text');
+            const linkMobileAuthSwitch = document.getElementById('link-mobile-auth-switch');
+
+            if (pcAuthTitle) pcAuthTitle.textContent = 'Đăng Nhập Hệ Thống';
+            if (btnPcAuthSubmit) btnPcAuthSubmit.textContent = 'Đăng nhập';
+            if (pcAuthSwitchText) pcAuthSwitchText.textContent = 'Chưa có tài khoản?';
+            if (linkPcAuthSwitch) linkPcAuthSwitch.textContent = 'Đăng ký ngay';
+
+            if (mobileAuthTitle) mobileAuthTitle.textContent = 'Đăng Nhập Hệ Thống';
+            if (btnMobileAuthSubmit) btnMobileAuthSubmit.textContent = 'Đăng nhập';
+            if (mobileAuthSwitchText) mobileAuthSwitchText.textContent = 'Chưa có tài khoản?';
+            if (linkMobileAuthSwitch) linkMobileAuthSwitch.textContent = 'Đăng ký ngay';
+
             if (pcLoggedOut) pcLoggedOut.style.display = 'flex';
             if (pcLoggedIn) pcLoggedIn.style.display = 'none';
 
@@ -3531,41 +3558,115 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Đăng ký các sự kiện nút Auth trên PC
-    const btnPcLogin = document.getElementById('btn-pc-login');
-    const btnPcRegister = document.getElementById('btn-pc-register');
-    const btnPcLogout = document.getElementById('btn-pc-logout');
+    // Quản lý chế độ Auth PC (Đăng nhập / Đăng ký)
+    const linkPcAuthSwitch = document.getElementById('link-pc-auth-switch');
+    const pcAuthTitle = document.getElementById('pc-auth-title');
+    const btnPcAuthSubmit = document.getElementById('btn-pc-auth-submit');
+    const pcAuthSwitchText = document.getElementById('pc-auth-switch-text');
 
-    if (btnPcLogin) btnPcLogin.addEventListener('click', () => performLogin('pc-username-input', 'pc-password-input'));
-    if (btnPcRegister) btnPcRegister.addEventListener('click', () => performRegister('pc-username-input', 'pc-password-input'));
+    if (linkPcAuthSwitch) {
+        linkPcAuthSwitch.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (pcAuthMode === 'login') {
+                pcAuthMode = 'register';
+                if (pcAuthTitle) pcAuthTitle.textContent = 'Đăng Ký Tài Khoản';
+                if (btnPcAuthSubmit) btnPcAuthSubmit.textContent = 'Đăng ký';
+                if (pcAuthSwitchText) pcAuthSwitchText.textContent = 'Đã có tài khoản?';
+                linkPcAuthSwitch.textContent = 'Đăng nhập';
+            } else {
+                pcAuthMode = 'login';
+                if (pcAuthTitle) pcAuthTitle.textContent = 'Đăng Nhập Hệ Thống';
+                if (btnPcAuthSubmit) btnPcAuthSubmit.textContent = 'Đăng nhập';
+                if (pcAuthSwitchText) pcAuthSwitchText.textContent = 'Chưa có tài khoản?';
+                linkPcAuthSwitch.textContent = 'Đăng ký ngay';
+            }
+        });
+    }
+
+    if (btnPcAuthSubmit) {
+        btnPcAuthSubmit.addEventListener('click', () => {
+            if (pcAuthMode === 'login') {
+                performLogin('pc-username-input', 'pc-password-input');
+            } else {
+                performRegister('pc-username-input', 'pc-password-input');
+            }
+        });
+    }
+
+    // Đăng xuất PC
+    const btnPcLogout = document.getElementById('btn-pc-logout');
     if (btnPcLogout) btnPcLogout.addEventListener('click', performLogout);
 
     // Thêm sự kiện Enter trên input PC
     const pcUserIn = document.getElementById('pc-username-input');
     const pcPassIn = document.getElementById('pc-password-input');
-    const triggerPcLoginOnEnter = (e) => {
-        if (e.key === 'Enter') performLogin('pc-username-input', 'pc-password-input');
+    const triggerPcAuthOnEnter = (e) => {
+        if (e.key === 'Enter') {
+            if (pcAuthMode === 'login') {
+                performLogin('pc-username-input', 'pc-password-input');
+            } else {
+                performRegister('pc-username-input', 'pc-password-input');
+            }
+        }
     };
-    if (pcUserIn) pcUserIn.addEventListener('keydown', triggerPcLoginOnEnter);
-    if (pcPassIn) pcPassIn.addEventListener('keydown', triggerPcLoginOnEnter);
+    if (pcUserIn) pcUserIn.addEventListener('keydown', triggerPcAuthOnEnter);
+    if (pcPassIn) pcPassIn.addEventListener('keydown', triggerPcAuthOnEnter);
 
-    // Đăng ký các sự kiện nút Auth trên Mobile
-    const btnMobileLogin = document.getElementById('btn-mobile-login');
-    const btnMobileRegister = document.getElementById('btn-mobile-register');
+    // Quản lý chế độ Auth Mobile
+    const linkMobileAuthSwitch = document.getElementById('link-mobile-auth-switch');
+    const mobileAuthTitle = document.getElementById('mobile-auth-title');
+    const btnMobileAuthSubmit = document.getElementById('btn-mobile-auth-submit');
+    const mobileAuthSwitchText = document.getElementById('mobile-auth-switch-text');
+
+    if (linkMobileAuthSwitch) {
+        linkMobileAuthSwitch.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (mobileAuthMode === 'login') {
+                mobileAuthMode = 'register';
+                if (mobileAuthTitle) mobileAuthTitle.textContent = 'Đăng Ký Tài Khoản';
+                if (btnMobileAuthSubmit) btnMobileAuthSubmit.textContent = 'Đăng ký';
+                if (mobileAuthSwitchText) mobileAuthSwitchText.textContent = 'Đã có tài khoản?';
+                linkMobileAuthSwitch.textContent = 'Đăng nhập';
+            } else {
+                mobileAuthMode = 'login';
+                if (mobileAuthTitle) mobileAuthTitle.textContent = 'Đăng Nhập Hệ Thống';
+                if (btnMobileAuthSubmit) btnMobileAuthSubmit.textContent = 'Đăng nhập';
+                if (mobileAuthSwitchText) mobileAuthSwitchText.textContent = 'Chưa có tài khoản?';
+                linkMobileAuthSwitch.textContent = 'Đăng ký ngay';
+            }
+        });
+    }
+
+    if (btnMobileAuthSubmit) {
+        btnMobileAuthSubmit.addEventListener('click', () => {
+            if (mobileAuthMode === 'login') {
+                performLogin('mobile-username-input', 'mobile-password-input');
+            } else {
+                performRegister('mobile-username-input', 'mobile-password-input');
+            }
+        });
+    }
+
+    // Đăng xuất Mobile
     const btnMobileLogout = document.getElementById('btn-mobile-logout');
-
-    if (btnMobileLogin) btnMobileLogin.addEventListener('click', () => performLogin('mobile-username-input', 'mobile-password-input'));
-    if (btnMobileRegister) btnMobileRegister.addEventListener('click', () => performRegister('mobile-username-input', 'mobile-password-input'));
     if (btnMobileLogout) btnMobileLogout.addEventListener('click', performLogout);
 
     // Thêm sự kiện Enter trên input Mobile
     const mobUserIn = document.getElementById('mobile-username-input');
     const mobPassIn = document.getElementById('mobile-password-input');
-    const triggerMobileLoginOnEnter = (e) => {
-        if (e.key === 'Enter') performLogin('mobile-username-input', 'mobile-password-input');
+    const triggerMobileAuthOnEnter = (e) => {
+        if (e.key === 'Enter') {
+            if (mobileAuthMode === 'login') {
+                performLogin('mobile-username-input', 'mobile-password-input');
+            } else {
+                performRegister('mobile-username-input', 'mobile-password-input');
+            }
+        }
     };
-    if (mobUserIn) mobUserIn.addEventListener('keydown', triggerMobileLoginOnEnter);
-    if (mobPassIn) mobPassIn.addEventListener('keydown', triggerMobileLoginOnEnter);
+    if (mobUserIn) mobUserIn.addEventListener('keydown', triggerMobileAuthOnEnter);
+    if (mobPassIn) mobPassIn.addEventListener('keydown', triggerMobileAuthOnEnter);
 
     // Khởi tạo Auth UI ban đầu
     updateAuthUI();
